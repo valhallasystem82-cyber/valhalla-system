@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Capital Humano</title>
+<link rel="stylesheet" href="style.css">
+<!-- Librería para la generación de informes en PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div id="login" class="login-screen">
+  <div class="login-card">
+    <div class="brand-mark" id="appLogo">CH</div>
+    <h1 id="appTitleHeader">Capital Humano</h1>
+    <p>Plataforma de gestión integral</p>
+    <form onsubmit="return login(event)">
+      <label>Usuario</label>
+      <input type="text" id="loginUser" required placeholder="Ingrese su usuario">
+      
+      <label>Contraseña</label>
+      <input type="password" id="loginPass" required placeholder="Ingrese su clave">
+      
+      <button type="submit" class="primary">Iniciar Sesión</button>
+    </form>
+  </div>
+</div>
+
+<div id="app" class="app hidden">
+  <aside class="sidebar">
+    <div class="brand">
+      <span id="sidebarLogo">CH</span>
+      <div>
+        <b id="sidebarTitle">Capital Humano</b>
+        <small>Gestión integral</small>
+      </div>
+    </div>
+    <nav id="nav">
+      <button class="active" data-page="dashboard">⌂ <span>Dashboard</span></button>
+      <button data-page="personal">👥 <span>Administración de personal</span></button>
+      <button data-page="asistencia">🕐 <span>Control de asistencia</span></button>
+      <button data-page="seguridad">🛡 <span>Higiene y seguridad</span></button>
+      <button data-page="salud">♥ <span>Salud ocupacional</span></button>
+      <button data-page="desempeno">★ <span>Gestión de desempeño</span></button>
+      <button data-page="capacitaciones">🎓 <span>Capacitaciones</span></button>
+      <button data-page="encuestas">☷ <span>Encuestas de clima</span></button>
+      <button data-page="legajos">📁 <span>Legajos digitales</span></button>
+      <button data-page="vacaciones">🏖 <span>Vacaciones y licencias</span></button>
+      <button data-page="recibos">▣ <span>Recibos de sueldo</span></button>
+      <button data-page="ausencias">⚠ <span>Ausencias</span></button>
+      <button data-page="historial">📜 <span>Historial de sistema</span></button>
+      <button data-page="config">⚙ <span>Configuración</span></button>
+    </nav>
+    <div class="side-bottom"><button onclick="logout()">↪ Cerrar sesión</button></div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="menu-btn" onclick="toggleSide()">☰</button>
+      <div><b id="pageTitle">Dashboard</b><small id="date"></small></div>
+      <div class="top-actions">
+        <span class="bell" onclick="openNotificationModal()" title="Configurar Notificaciones">🔔</span>
+        <div class="avatar" id="userAvatar">A</div>
+        <div>
+          <b id="userNameDisplay">Administrador</b>
+          <small id="userRoleDisplay">RRHH</small>
+        </div>
+      </div>
+    </header>
+    <section id="content" class="content"></section>
+  </main>
+</div>
+
+<div id="modal" class="modal hidden"><div class="modal-card"><button class="close" onclick="closeModal()">×</button><div id="modalBody"></div></div></div>
+<script src="script.js"></script>
+</body>
+</html>
