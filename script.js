@@ -1,7 +1,7 @@
 // ============================================================================
-// 🌐 SINCRONIZACIÓN EN LA NUBE (Para que los usuarios funcionen en cualquier PC)
+// 🌐 SINCRONIZACIÓN EN LA NUBE (Datos globales entre diferentes PCs)
 // ============================================================================
-const BIN_ID = "65a0000012a5231935999999"; // Contenedor global de datos compartidos
+const BIN_ID = "65a0000012a5231935999999"; 
 
 async function syncFromCloud() {
   try {
@@ -44,7 +44,7 @@ try {
   fs = require('fs');
   path = require('path');
 } catch (e) {
-  // Ignorar módulos de Node.js si corre directamente en el navegador de GitHub
+  // Entorno de navegador puro (GitHub Pages)
 }
 
 const MI_CLAVE_SECRETA = "ValhallaSystem2026MasterKey";
@@ -70,7 +70,7 @@ function calcularClaveEsperada(hwid, periodo) {
 
 function verificarProteccionHardware() {
   try {
-    if (!machineIdSync) return true; // Si es navegador web puro, continúa libremente
+    if (!machineIdSync) return true;
     const currentHwid = machineIdSync();
 
     if (MI_PC_HWID && currentHwid === MI_PC_HWID) {
@@ -141,7 +141,7 @@ function saveStorage(key, data) {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(key, JSON.stringify(data));
     }
-    syncToCloud(); // Sincroniza los cambios automáticamente en la nube
+    syncToCloud(); 
   } catch (e) {
     console.error(`Error al guardar ${key} en localStorage:`, e);
   }
@@ -187,6 +187,28 @@ const titles = {
 
 let current = "dashboard";
 
+// --- GESTIÓN DE SESIONES MULTIUSUARIO EN PESTAÑAS ---
+function loadCurrentSession() {
+  if (typeof sessionStorage === 'undefined') return;
+  const savedUser = sessionStorage.getItem("app_current_user");
+  if (savedUser) {
+    const found = users.find(u => u.user === savedUser);
+    if (found) {
+      currentUser = found.user;
+      currentUserRole = found.role;
+      
+      const loginElem = document.getElementById("login");
+      const appElem = document.getElementById("app");
+      if (loginElem) loginElem.classList.add("hidden");
+      if (appElem) appElem.classList.remove("hidden");
+      
+      updateHeaderUserInfo();
+      applyAppTheme();
+      render("dashboard");
+    }
+  }
+}
+
 // --- GESTIÓN DE MODALES ---
 function openModal(body) {
   const mBody = document.getElementById("modalBody");
@@ -208,8 +230,8 @@ function closeModal() {
 
 if (typeof document !== 'undefined') {
   document.addEventListener("DOMContentLoaded", async () => {
-    await syncFromCloud(); // Carga usuarios y datos desde la nube al iniciar
-    applyAppTheme();
+    await syncFromCloud();
+    loadCurrentSession();
 
     const dateEl = document.getElementById("date");
     if (dateEl) {
@@ -356,7 +378,7 @@ function toggleSide() {
 
 async function login(event) {
   if (event) event.preventDefault();
-  await syncFromCloud(); // Actualiza los usuarios registrados antes de autenticar
+  await syncFromCloud();
 
   const uInput = document.getElementById("loginUser");
   const pInput = document.getElementById("loginPass");
@@ -369,6 +391,11 @@ async function login(event) {
   if (found) {
     currentUser = found.user;
     currentUserRole = found.role;
+    
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem("app_current_user", found.user);
+    }
+
     const loginElem = document.getElementById("login");
     const appElem = document.getElementById("app");
     
@@ -388,6 +415,9 @@ async function login(event) {
 
 function logout() {
   addLog("Cierre de sesión.");
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.removeItem("app_current_user");
+  }
   currentUser = null;
   currentUserRole = "admin";
   
@@ -659,7 +689,7 @@ async function saveSystemCustomization() {
 
 // --- ALTA Y GESTIÓN DE EMPLEADOS ---
 function openEmployee() {
-  openModal(`2>Nuevo Empleado</h2>
+  openModal(`<h2>Nuevo Empleado</h2>
     <div class="form-grid">
       <label>N° de Legajo<input id="newLegajoNum" placeholder="ej. LEG-001"></label>
       <label>Nombre completo<input id="newName"></label>
