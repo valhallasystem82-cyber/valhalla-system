@@ -1,14 +1,152 @@
+// ============================================================================
+// 🌐 SINCRONIZACIÓN EN LA NUBE (Para que los usuarios funcionen en cualquier PC)
+// ============================================================================
+const BIN_ID = "65a0000012a5231935999999"; // Contenedor global de datos compartidos
+
+async function syncFromCloud() {
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`);
+    const data = await res.json();
+    if (data && data.record) {
+      if (data.record.users) users = data.record.users;
+      if (data.record.employees) employees = data.record.employees;
+      if (data.record.attendance) attendance = data.record.attendance;
+      if (data.record.records) records = data.record.records;
+    }
+  } catch (e) {
+    console.log("Cargando desde respaldo local:", e);
+  }
+}
+
+async function syncToCloud() {
+  try {
+    await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ users, employees, attendance, records })
+    });
+  } catch (e) {
+    console.error("Error al sincronizar en la nube:", e);
+  }
+}
+
+// ============================================================================
+// 🔒 CONTROL DE LICENCIA POR HARDWARE (HWID) Y VENCIMIENTO MENSUAL
+// ============================================================================
+let machineIdSync = null;
+let crypto = null;
+let fs = null;
+let path = null;
+
+try {
+  machineIdSync = require('node-machine-id').machineIdSync;
+  crypto = require('crypto');
+  fs = require('fs');
+  path = require('path');
+} catch (e) {
+  // Ignorar módulos de Node.js si corre directamente en el navegador de GitHub
+}
+
+const MI_CLAVE_SECRETA = "ValhallaSystem2026MasterKey";
+const MI_PC_HWID = "96C28570-B7F7-0000-0000-000000000000";
+
+function getPeriodoActual() {
+  const fecha = new Date();
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const ano = fecha.getFullYear();
+  return `${mes}-${ano}`;
+}
+
+function calcularClaveEsperada(hwid, periodo) {
+  if (!crypto) return "1234-5678-9012";
+  const hash = crypto
+    .createHash('sha256')
+    .update(`${hwid}-${periodo}-${MI_CLAVE_SECRETA}`)
+    .digest('hex');
+
+  const bloque = hash.substring(0, 12).toUpperCase();
+  return `${bloque.slice(0, 4)}-${bloque.slice(4, 8)}-${bloque.slice(8, 12)}`;
+}
+
+function verificarProteccionHardware() {
+  try {
+    if (!machineIdSync) return true; // Si es navegador web puro, continúa libremente
+    const currentHwid = machineIdSync();
+
+    if (MI_PC_HWID && currentHwid === MI_PC_HWID) {
+      console.log("Acceso de Desarrollador Concedido.");
+      return true;
+    }
+
+    const periodoActual = getPeriodoActual();
+    const claveCorrectaEsteMes = calcularClaveEsperada(currentHwid, periodoActual);
+    const licensePath = path ? path.join(process.cwd(), 'license.lic') : '';
+
+    if (fs && fs.existsSync(licensePath)) {
+      const claveGuardada = fs.readFileSync(licensePath, 'utf8').trim();
+      if (claveGuardada === claveCorrectaEsteMes) {
+        return true;
+      }
+    }
+
+    let nuevaClave = null;
+    if (typeof window !== 'undefined' && typeof window.prompt === 'function') {
+      nuevaClave = window.prompt(
+        `⚠️ LICENCIA DE USO - VALHALLA SYSTEM\n\n` +
+        `Período actual: ${periodoActual}\n` +
+        `ID de Hardware: ${currentHwid}\n\n` +
+        `Ingrese la clave de activación:`
+      );
+    }
+
+    if (nuevaClave && nuevaClave.trim() === claveCorrectaEsteMes) {
+      if (fs) fs.writeFileSync(licensePath, nuevaClave.trim());
+      if (typeof window !== 'undefined' && typeof window.alert === 'function') {
+        window.alert("¡Licencia validada correctamente!");
+      }
+      return true;
+    } else {
+      if (typeof window !== 'undefined' && typeof window.alert === 'function') {
+        window.alert("❌ Clave incorrecta o vencida. El sistema se cerrará.");
+      }
+      if (typeof process !== 'undefined' && process.exit) {
+        process.exit(0);
+      }
+      return false;
+    }
+  } catch (error) {
+    console.error("Error al verificar la licencia de Hardware:", error);
+    return false;
+  }
+}
+
+verificarProteccionHardware();
+
+// ============================================================================
 // --- MANEJO DE PERSISTENCIA ---
+// ============================================================================
 function loadStorage(key, defaultValue) {
-  const saved = localStorage.getItem(key);
-  return saved ? JSON.parse(saved) : defaultValue;
+  try {
+    if (typeof localStorage === 'undefined') return defaultValue;
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : defaultValue;
+  } catch (e) {
+    console.error(`Error al cargar ${key} desde localStorage:`, e);
+    return defaultValue;
+  }
 }
 
 function saveStorage(key, data) {
-  localStorage.setItem(key, JSON.stringify(data));
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(key, JSON.stringify(data));
+    }
+    syncToCloud(); // Sincroniza los cambios automáticamente en la nube
+  } catch (e) {
+    console.error(`Error al guardar ${key} en localStorage:`, e);
+  }
 }
 
-// Configuración por defecto del sistema (Neutro)
 const defaultConfig = {
   appName: "Valhalla System Capital Humano",
   primaryColor: "#0878ee",
@@ -16,19 +154,18 @@ const defaultConfig = {
   appLogoImg: "" 
 };
 
-// Carga la configuración propia del usuario activo (o neutra si no hay sesión)
+let currentUser = null;
+let currentUserRole = "admin";
+
 function loadUserConfig() {
   if (!currentUser) return defaultConfig;
   return loadStorage(`app_config_${currentUser}`, defaultConfig);
 }
 
-let currentUser = null;
-let currentUserRole = "admin";
-
 let users = loadStorage("app_users", [
   { user: "admin", pass: "1234", role: "admin", nombre: "Administrador General", email: "admin@valhalla.com", whatsapp: "+5491100000000" },
   { user: "usuario", pass: "1234", role: "usuario", nombre: "Usuario Operativo", email: "usuario@valhalla.com", whatsapp: "" }
-  ]);
+]);
 
 let employees = loadStorage("app_employees", []);
 let attendance = loadStorage("app_attendance", []);
@@ -50,30 +187,58 @@ const titles = {
 
 let current = "dashboard";
 
-document.addEventListener("DOMContentLoaded", () => {
-  applyAppTheme();
-
-  const dateEl = document.getElementById("date");
-  if (dateEl) {
-    dateEl.textContent = new Date().toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+// --- GESTIÓN DE MODALES ---
+function openModal(body) {
+  const mBody = document.getElementById("modalBody");
+  const modal = document.getElementById("modal");
+  if (mBody && modal) { 
+    mBody.innerHTML = body; 
+    modal.classList.remove("hidden"); 
+    modal.style.display = "flex";
   }
+}
 
-  const nav = document.getElementById("nav");
-  if (nav) {
-    nav.addEventListener("click", (e) => {
-      const btn = e.target.closest("button");
-      if (!btn) return;
-      const page = btn.getAttribute("data-page");
-      if (page) {
-        document.querySelectorAll("#nav button").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        render(page);
-      }
-    });
+function closeModal() {
+  const modal = document.getElementById("modal");
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.style.display = "none";
   }
-});
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener("DOMContentLoaded", async () => {
+    await syncFromCloud(); // Carga usuarios y datos desde la nube al iniciar
+    applyAppTheme();
+
+    const dateEl = document.getElementById("date");
+    if (dateEl) {
+      dateEl.textContent = new Date().toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    }
+
+    const nav = document.getElementById("nav");
+    if (nav) {
+      nav.addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        const page = btn.getAttribute("data-page");
+        if (page) {
+          document.querySelectorAll("#nav button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          render(page);
+        }
+      });
+    }
+
+    const modalCloseBtn = document.getElementById("modalClose");
+    if (modalCloseBtn) {
+      modalCloseBtn.addEventListener("click", closeModal);
+    }
+  });
+}
 
 function applyAppTheme() {
+  if (typeof document === 'undefined') return;
   const userConfig = loadUserConfig();
 
   const headerTitle = document.getElementById("appTitleHeader");
@@ -82,10 +247,8 @@ function applyAppTheme() {
   if (sidebarTitle) sidebarTitle.textContent = userConfig.appName;
   document.title = userConfig.appName;
 
-  // Aplicar Color Principal
   document.documentElement.style.setProperty('--primary-color', userConfig.primaryColor);
 
-  // Aplicar Logo individual
   const appLogo = document.getElementById("appLogo");
   const sidebarLogo = document.getElementById("sidebarLogo");
   if (userConfig.appLogoImg) {
@@ -97,7 +260,6 @@ function applyAppTheme() {
     if (sidebarLogo) sidebarLogo.textContent = "CH";
   }
 
-  // Aplicar Fondo de pantalla individual
   const loginScreen = document.getElementById("login");
   if (loginScreen) {
     loginScreen.style.backgroundImage = userConfig.bgImage ? `url('${userConfig.bgImage}')` : `linear-gradient(135deg, #071a33, ${userConfig.primaryColor})`;
@@ -143,7 +305,6 @@ function addLog(accion, empleadoAsociado = "General") {
   saveStorage("app_auditLogs", auditLogs);
 }
 
-// NUEVA FUNCIÓN CON COMPRESIÓN DE IMÁGENES AUTOMÁTICA
 function getBase64(file, maxWidth = 800, quality = 0.7) {
   return new Promise((resolve, reject) => {
     if (!file) return resolve("");
@@ -189,11 +350,14 @@ function checkAdminPassword() {
 }
 
 function toggleSide() {
-  document.querySelector(".sidebar").classList.toggle("open");
+  const sidebar = document.querySelector(".sidebar");
+  if (sidebar) sidebar.classList.toggle("open");
 }
 
-function login(event) {
+async function login(event) {
   if (event) event.preventDefault();
+  await syncFromCloud(); // Actualiza los usuarios registrados antes de autenticar
+
   const uInput = document.getElementById("loginUser");
   const pInput = document.getElementById("loginPass");
 
@@ -205,9 +369,13 @@ function login(event) {
   if (found) {
     currentUser = found.user;
     currentUserRole = found.role;
-    document.getElementById("login").classList.add("hidden");
-    document.getElementById("app").classList.remove("hidden");
+    const loginElem = document.getElementById("login");
+    const appElem = document.getElementById("app");
+    
+    if (loginElem) loginElem.classList.add("hidden");
+    if (appElem) appElem.classList.remove("hidden");
     if (pInput) pInput.value = ""; 
+    
     updateHeaderUserInfo();
     applyAppTheme();
     addLog(`Sesión iniciada por usuario: ${found.user}`);
@@ -222,8 +390,12 @@ function logout() {
   addLog("Cierre de sesión.");
   currentUser = null;
   currentUserRole = "admin";
-  document.getElementById("app").classList.add("hidden");
-  document.getElementById("login").classList.remove("hidden");
+  
+  const appElem = document.getElementById("app");
+  const loginElem = document.getElementById("login");
+  
+  if (appElem) appElem.classList.add("hidden");
+  if (loginElem) loginElem.classList.remove("hidden");
   
   applyAppTheme();
 }
@@ -314,8 +486,10 @@ function openNotificationModal() {
 function saveNotificationContact() {
   const userAcc = users.find(u => u.user === currentUser);
   if (userAcc) {
-    userAcc.email = document.getElementById("notif_userEmail").value.trim();
-    userAcc.whatsapp = document.getElementById("notif_userWp").value.trim();
+    const emailElem = document.getElementById("notif_userEmail");
+    const wpElem = document.getElementById("notif_userWp");
+    if (emailElem) userAcc.email = emailElem.value.trim();
+    if (wpElem) userAcc.whatsapp = wpElem.value.trim();
     saveStorage("app_users", users);
     alert("¡Datos de contacto guardados correctamente!");
   }
@@ -323,7 +497,8 @@ function saveNotificationContact() {
 
 function sendWhatsAppAdmin() {
   const adminAcc = users.find(u => u.role === "admin") || {};
-  const msg = document.getElementById("notif_mensaje").value.trim();
+  const msgElem = document.getElementById("notif_mensaje");
+  const msg = msgElem ? msgElem.value.trim() : "";
   if (!msg) return alert("Por favor, ingresá un mensaje.");
 
   const userConfig = loadUserConfig();
@@ -339,7 +514,8 @@ function sendWhatsAppAdmin() {
 
 function sendEmailAdmin() {
   const adminAcc = users.find(u => u.role === "admin") || {};
-  const msg = document.getElementById("notif_mensaje").value.trim();
+  const msgElem = document.getElementById("notif_mensaje");
+  const msg = msgElem ? msgElem.value.trim() : "";
   if (!msg) return alert("Por favor, ingresá un mensaje.");
 
   const userConfig = loadUserConfig();
@@ -461,12 +637,10 @@ async function saveSystemCustomization() {
       userConfig.primaryColor = colorInput.value;
     }
 
-    // Procesar Fondo con compresión
     if (bgInput && bgInput.files && bgInput.files[0]) {
       userConfig.bgImage = await getBase64(bgInput.files[0], 1200, 0.6);
     }
 
-    // Procesar Logo con compresión
     if (logoInput && logoInput.files && logoInput.files[0]) {
       userConfig.appLogoImg = await getBase64(logoInput.files[0], 400, 0.7);
     }
@@ -485,7 +659,7 @@ async function saveSystemCustomization() {
 
 // --- ALTA Y GESTIÓN DE EMPLEADOS ---
 function openEmployee() {
-  openModal(`<h2>Nuevo Empleado</h2>
+  openModal(`2>Nuevo Empleado</h2>
     <div class="form-grid">
       <label>N° de Legajo<input id="newLegajoNum" placeholder="ej. LEG-001"></label>
       <label>Nombre completo<input id="newName"></label>
@@ -510,21 +684,21 @@ async function saveEmployee() {
   if (!n) return alert("Por favor, ingresá el nombre.");
   if (!leg) return alert("Por favor, asigná un número de legajo.");
 
-  const photoFile = document.getElementById("newPhoto").files[0];
-  const dniFile = document.getElementById("newDniImg").files[0];
-  const antFile = document.getElementById("newAntecedentes").files[0];
-  const segFile = document.getElementById("newSeguro").files[0];
+  const photoFile = document.getElementById("newPhoto")?.files[0];
+  const dniFile = document.getElementById("newDniImg")?.files[0];
+  const antFile = document.getElementById("newAntecedentes")?.files[0];
+  const segFile = document.getElementById("newSeguro")?.files[0];
 
   const empData = {
     id: Date.now(),
     legajo: leg,
     nombre: n,
-    dniNum: document.getElementById("newDniNum").value || "-",
-    fechaIngreso: document.getElementById("newFechaIngreso").value || "-",
-    puesto: document.getElementById("newJob").value || "General",
-    sector: document.getElementById("newSector").value || "General",
-    telefono: document.getElementById("newPhone").value || "",
-    email: document.getElementById("newEmail").value || "",
+    dniNum: document.getElementById("newDniNum")?.value || "-",
+    fechaIngreso: document.getElementById("newFechaIngreso")?.value || "-",
+    puesto: document.getElementById("newJob")?.value || "General",
+    sector: document.getElementById("newSector")?.value || "General",
+    telefono: document.getElementById("newPhone")?.value || "",
+    email: document.getElementById("newEmail")?.value || "",
     foto: photoFile ? await getBase64(photoFile, 500) : "",
     fotoDni: dniFile ? await getBase64(dniFile, 800) : "",
     fotoAntecedentes: antFile ? await getBase64(antFile, 800) : "",
@@ -631,6 +805,8 @@ function descargarHistorialPDF(id) {
   });
 
   const printWindow = window.open('', '_blank');
+  if (!printWindow) return alert("Por favor habilita las ventanas emergentes en tu navegador.");
+  
   printWindow.document.write(`
     <html>
       <head>
@@ -775,10 +951,13 @@ function openRemoteAttendanceModal(tipo) {
 }
 
 function processRemoteAttendance(tipo) {
-  const empId = parseInt(document.getElementById("remote_empId").value);
+  const empElem = document.getElementById("remote_empId");
+  if (!empElem) return;
+  
+  const empId = parseInt(empElem.value);
   const emp = employees.find(e => e.id === empId);
 
-  if (!navigator.geolocation) return alert("Tu dispositivo no soporta geolocalización.");
+  if (typeof navigator === 'undefined' || !navigator.geolocation) return alert("Tu dispositivo no soporta geolocalización.");
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
@@ -903,16 +1082,16 @@ function openRangoModal(key, title) {
 
 async function saveRecordRango(key) {
   if (!records[key]) records[key] = [];
-  const empNombre = document.getElementById("gen_0").value;
-  const fotoFile = document.getElementById("gen_foto").files[0];
+  const empNombre = document.getElementById("gen_0")?.value || "";
+  const fotoFile = document.getElementById("gen_foto")?.files[0];
 
   records[key].push({
     id: Date.now(),
     f0: empNombre,
-    f1: document.getElementById("gen_1").value,
-    f2: document.getElementById("gen_2").value,
-    f3: document.getElementById("gen_3").value,
-    f4: document.getElementById("gen_4").value,
+    f1: document.getElementById("gen_1")?.value || "",
+    f2: document.getElementById("gen_2")?.value || "",
+    f3: document.getElementById("gen_3")?.value || "",
+    f4: document.getElementById("gen_4")?.value || "",
     fotoDoc: fotoFile ? await getBase64(fotoFile, 800) : "",
     owner: currentUser
   });
@@ -963,15 +1142,15 @@ function openGenericModal(key, title) {
 
 async function saveRecordGeneric(key) {
   if (!records[key]) records[key] = [];
-  const empNombre = document.getElementById("gen_0").value;
-  const fotoFile = document.getElementById("gen_foto").files[0];
+  const empNombre = document.getElementById("gen_0")?.value || "";
+  const fotoFile = document.getElementById("gen_foto")?.files[0];
 
   records[key].push({
     id: Date.now(),
     f0: empNombre,
-    f1: document.getElementById("gen_1").value,
-    f2: document.getElementById("gen_2").value,
-    f3: document.getElementById("gen_3").value,
+    f1: document.getElementById("gen_1")?.value || "",
+    f2: document.getElementById("gen_2")?.value || "",
+    f3: document.getElementById("gen_3")?.value || "",
     fotoDoc: fotoFile ? await getBase64(fotoFile, 800) : "",
     owner: currentUser
   });
@@ -1026,10 +1205,10 @@ function openCreateUserModal() {
 }
 
 function saveNewUser() {
-  const u = document.getElementById("usr_user").value.trim();
-  const p = document.getElementById("usr_pass").value.trim();
-  const n = document.getElementById("usr_nombre").value.trim() || u;
-  const r = document.getElementById("usr_role").value;
+  const u = document.getElementById("usr_user")?.value.trim() || "";
+  const p = document.getElementById("usr_pass")?.value.trim() || "";
+  const n = document.getElementById("usr_nombre")?.value.trim() || u;
+  const r = document.getElementById("usr_role")?.value || "usuario";
 
   if (!u || !p) return alert("Por favor complete usuario y contraseña.");
 
@@ -1049,19 +1228,10 @@ function deleteUser(index) {
   }
 }
 
-function openModal(body) {
-  const mBody = document.getElementById("modalBody");
-  const modal = document.getElementById("modal");
-  if (mBody && modal) { mBody.innerHTML = body; modal.classList.remove("hidden"); }
-}
-
-function closeModal() {
-  const modal = document.getElementById("modal");
-  if (modal) modal.classList.add("hidden");
-}
-
 function filterEmployees() {
-  const q = document.getElementById("empSearch").value.toLowerCase();
+  const empSearch = document.getElementById("empSearch");
+  if (!empSearch) return;
+  const q = empSearch.value.toLowerCase();
   document.querySelectorAll("#empTable tbody tr").forEach(r => {
     r.style.display = r.innerText.toLowerCase().includes(q) ? "" : "none";
   });
