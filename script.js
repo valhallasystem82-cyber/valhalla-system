@@ -27,9 +27,8 @@ let currentUserRole = "admin";
 
 let users = loadStorage("app_users", [
   { user: "admin", pass: "1234", role: "admin", nombre: "Administrador General", email: "admin@valhalla.com", whatsapp: "+5491100000000" },
-  { user: "usuario", pass: "1234", role: "usuario", nombre: "Usuario Operativo", email: "usuario@valhalla.com", whatsapp: "" },
-  { user: "juan", pass: "miClave2026", role: "usuario", nombre: "Juan Pérez", email: "juan@empresa.com", whatsapp: "" }
-]);
+  { user: "usuario", pass: "1234", role: "usuario", nombre: "Usuario Operativo", email: "usuario@valhalla.com", whatsapp: "" }
+  ]);
 
 let employees = loadStorage("app_employees", []);
 let attendance = loadStorage("app_attendance", []);
