@@ -243,7 +243,6 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
 
     // Configuración de Firebase
     const firebaseConfig = {
@@ -252,21 +251,52 @@
       projectId: "valhala-system-cappital-humano",
       storageBucket: "valhala-system-cappital-humano.firebasestorage.app",
       messagingSenderId: "108221107760",
-      appId: "1:108221107760:web:b79dc919cd72b5f81f27f5",
-      measurementId: "G-P9WQR5NK36"
+      appId: "1:108221107760:web:b79dc919cd72b5f81f27f5"
     };
 
-    // Inicialización de Firebase Servicios
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const analytics = getAnalytics(app);
 
-    // --- MANEJO DE PERSISTENCIA FIREBASE FIRESTORE ---
+    // --- ESTADO GLOBAL ---
+    const defaultConfig = {
+      appName: "Valhalla System Capital Humano",
+      primaryColor: "#0878ee",
+      bgImage: "",
+      appLogoImg: "" 
+    };
+
+    let currentUser = null;
+    let currentUserRole = "admin";
+
+    let users = [
+      { user: "admin", pass: "1234", role: "admin", nombre: "Administrador General", email: "admin@valhalla.com", whatsapp: "" },
+      { user: "usuario", pass: "1234", role: "usuario", nombre: "Usuario Operativo", email: "usuario@valhalla.com", whatsapp: "" }
+    ];
+
+    let employees = [];
+    let attendance = [];
+    let auditLogs = [];
+    let records = {
+      seguridad: [], salud: [], desempeno: [], capacitaciones: [], encuestas: [], recibos: [], vacaciones: [], ausencias: [], legajos: []
+    };
+
+    const titles = {
+      dashboard: "Dashboard", personal: "Administración de personal", asistencia: "Control de asistencia",
+      seguridad: "Higiene y seguridad", salud: "Salud ocupacional", desempeno: "Gestión de desempeño",
+      capacitaciones: "Capacitaciones", encuestas: "Encuestas de clima", legajos: "Legajos digitales",
+      vacaciones: "Vacaciones y licencias", recibos: "Recibos de sueldo", ausencias: "Ausencias",
+      historial: "Historial de sistema (Auditoría)", config: "Configuración y Personalización"
+    };
+
+    let current = "dashboard";
+
+    // --- SINCRO REALTIME CON FIRESTORE ---
     function initRealtimeSync() {
+      // Escuchar Colección Principal
       onSnapshot(doc(db, "app_data", "main_store"), (snapshot) => {
         if (snapshot.exists()) {
           const data = snapshot.data();
-          users = data.users || users;
+          if (data.users && data.users.length) users = data.users;
           employees = data.employees || [];
           attendance = data.attendance || [];
           auditLogs = data.auditLogs || [];
@@ -275,17 +305,26 @@
           if (currentUser) {
             render(current);
           }
+        } else {
+          // Crear documento inicial si está vacío
+          syncToFirebase();
         }
+      }, (error) => {
+        console.error("Error en lectura Firebase:", error);
       });
     }
 
     async function syncToFirebase() {
       try {
-        await setDoc(doc(db, "app_data", "main_store"), {
+        // Limpiar objetos de valores undefined antes de enviar a Firebase
+        const cleanData = JSON.parse(JSON.stringify({
           users, employees, attendance, auditLogs, records
-        }, { merge: true });
+        }));
+
+        await setDoc(doc(db, "app_data", "main_store"), cleanData, { merge: true });
+        console.log("Sincronizado con Firebase Firestore con éxito.");
       } catch (error) {
-        console.error("Error al sincronizar con Firebase:", error);
+        console.error("Error al guardar en Firebase:", error);
       }
     }
 
@@ -303,47 +342,12 @@
     async function saveUserConfig(configData) {
       if (!currentUser) return;
       try {
-        await setDoc(doc(db, "user_configs", currentUser), configData);
+        const cleanConfig = JSON.parse(JSON.stringify(configData));
+        await setDoc(doc(db, "user_configs", currentUser), cleanConfig);
       } catch (error) {
         console.error("Error al guardar configuración:", error);
       }
     }
-
-    // --- ESTADO GLOBAL Y VARIABLES DE NAVEGACIÓN ---
-    const defaultConfig = {
-      appName: "Valhalla System Capital Humano",
-      primaryColor: "#0878ee",
-      bgImage: "",
-      appLogoImg: "" 
-    };
-
-    let currentUser = null;
-    let currentUserRole = "admin";
-
-    let users = [
-      { user: "admin", pass: "1234", role: "admin", nombre: "Administrador General", email: "admin@valhalla.com", whatsapp: "+5491100000000" },
-      { user: "usuario", pass: "1234", role: "usuario", nombre: "Usuario Operativo", email: "usuario@valhalla.com", whatsapp: "" }
-    ];
-
-    let employees = [];
-    let attendance = [];
-    let auditLogs = [
-      { id: 1, fechaHora: new Date().toLocaleString("es-AR"), usuario: "sistema", accion: "Sistema iniciado", owner: "admin" }
-    ];
-
-    let records = {
-      seguridad: [], salud: [], desempeno: [], capacitaciones: [], encuestas: [], recibos: [], vacaciones: [], ausencias: [], legajos: []
-    };
-
-    const titles = {
-      dashboard: "Dashboard", personal: "Administración de personal", asistencia: "Control de asistencia",
-      seguridad: "Higiene y seguridad", salud: "Salud ocupacional", desempeno: "Gestión de desempeño",
-      capacitaciones: "Capacitaciones", encuestas: "Encuestas de clima", legajos: "Legajos digitales",
-      vacaciones: "Vacaciones y licencias", recibos: "Recibos de sueldo", ausencias: "Ausencias",
-      historial: "Historial de sistema (Auditoría)", config: "Configuración y Personalización"
-    };
-
-    let current = "dashboard";
 
     document.addEventListener("DOMContentLoaded", () => {
       initRealtimeSync();
@@ -380,8 +384,7 @@
 
       const sidebarLogo = document.getElementById("sidebarLogo");
       if (userConfig.appLogoImg) {
-        const imgHtml = `<img src="${userConfig.appLogoImg}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`;
-        if (sidebarLogo) sidebarLogo.innerHTML = imgHtml;
+        if (sidebarLogo) sidebarLogo.innerHTML = `<img src="${userConfig.appLogoImg}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`;
       } else {
         if (sidebarLogo) sidebarLogo.textContent = "CH";
       }
@@ -559,11 +562,9 @@
       }
     }
 
-    // Exportar funciones a window para manejo de eventos DOM
+    // Exportar funciones globales
     window.openNotificationModal = function() {
       const userAcc = users.find(u => u.user === currentUser) || {};
-      const adminAcc = users.find(u => u.role === "admin") || {};
-
       openModal(`
         <h2>🔔 Centro de Notificaciones y Alertas</h2>
         <p class="muted">Vinculá tus canales para recibir avisos e informes del sistema.</p>
