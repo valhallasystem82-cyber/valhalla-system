@@ -1,83 +1,11 @@
-// --- CONFIGURACIÓN E INICIALIZACIÓN DE FIREBASE ---
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { 
-  getFirestore, 
-  doc, 
-  getDoc, 
-  setDoc, 
-  onSnapshot 
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-// Reemplaza los siguientes valores con tus credenciales de la consola de Firebase
-const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_PROJECT_ID.firebaseapp.com",
-  projectId: "TU_PROJECT_ID",
-  storageBucket: "TU_PROJECT_ID.appspot.com",
-  messagingSenderId: "TU_SENDER_ID",
-  appId: "TU_APP_ID"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// --- MANEJO DE PERSISTENCIA CON FIREBASE FIRESTORE ---
-
-// Escuchar cambios en tiempo real desde Firestore
-function initRealtimeSync() {
-  onSnapshot(doc(db, "app_data", "main_store"), (snapshot) => {
-    if (snapshot.exists()) {
-      const data = snapshot.data();
-      users = data.users || users;
-      employees = data.employees || [];
-      attendance = data.attendance || [];
-      auditLogs = data.auditLogs || [];
-      records = data.records || records;
-      
-      // Re-renderizar la pantalla actual con los nuevos datos
-      if (currentUser) {
-        render(current);
-      }
-    }
-  });
+// --- MANEJO DE PERSISTENCIA ---
+function loadStorage(key, defaultValue) {
+  const saved = localStorage.getItem(key);
+  return saved ? JSON.parse(saved) : defaultValue;
 }
 
-// Guardar el estado global de la aplicación en la nube
-async function syncToFirebase() {
-  try {
-    await setDoc(doc(db, "app_data", "main_store"), {
-      users,
-      employees,
-      attendance,
-      auditLogs,
-      records
-    }, { merge: true });
-  } catch (error) {
-    console.error("Error al sincronizar con Firebase:", error);
-  }
-}
-
-// Cargar y guardar configuraciones individuales por usuario
-async function loadUserConfig() {
-  if (!currentUser) return defaultConfig;
-  try {
-    const docSnap = await getDoc(doc(db, "user_configs", currentUser));
-    if (docSnap.exists()) {
-      return docSnap.data();
-    }
-  } catch (error) {
-    console.error("Error al cargar configuración:", error);
-  }
-  return defaultConfig;
-}
-
-async function saveUserConfig(configData) {
-  if (!currentUser) return;
-  try {
-    await setDoc(doc(db, "user_configs", currentUser), configData);
-  } catch (error) {
-    console.error("Error al guardar configuración:", error);
-  }
+function saveStorage(key, data) {
+  localStorage.setItem(key, JSON.stringify(data));
 }
 
 // Configuración por defecto del sistema (Neutro)
@@ -88,23 +16,29 @@ const defaultConfig = {
   appLogoImg: "" 
 };
 
+// Carga la configuración propia del usuario activo (o neutra si no hay sesión)
+function loadUserConfig() {
+  if (!currentUser) return defaultConfig;
+  return loadStorage(`app_config_${currentUser}`, defaultConfig);
+}
+
 let currentUser = null;
 let currentUserRole = "admin";
 
-let users = [
+let users = loadStorage("app_users", [
   { user: "admin", pass: "1234", role: "admin", nombre: "Administrador General", email: "admin@valhalla.com", whatsapp: "+5491100000000" },
   { user: "usuario", pass: "1234", role: "usuario", nombre: "Usuario Operativo", email: "usuario@valhalla.com", whatsapp: "" }
-];
+]);
 
-let employees = [];
-let attendance = [];
-let auditLogs = [
+let employees = loadStorage("app_employees", []);
+let attendance = loadStorage("app_attendance", []);
+let auditLogs = loadStorage("app_auditLogs", [
   { id: 1, fechaHora: new Date().toLocaleString("es-AR"), usuario: "sistema", accion: "Sistema iniciado", owner: "admin" }
-];
+]);
 
-let records = {
+let records = loadStorage("app_records", {
   seguridad: [], salud: [], desempeno: [], capacitaciones: [], encuestas: [], recibos: [], vacaciones: [], ausencias: [], legajos: []
-};
+});
 
 const titles = {
   dashboard: "Dashboard", personal: "Administración de personal", asistencia: "Control de asistencia",
@@ -117,7 +51,6 @@ const titles = {
 let current = "dashboard";
 
 document.addEventListener("DOMContentLoaded", () => {
-  initRealtimeSync();
   applyAppTheme();
 
   const dateEl = document.getElementById("date");
@@ -140,8 +73,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-async function applyAppTheme() {
-  const userConfig = await loadUserConfig();
+function applyAppTheme() {
+  const userConfig = loadUserConfig();
 
   const headerTitle = document.getElementById("appTitleHeader");
   const sidebarTitle = document.getElementById("sidebarTitle");
@@ -207,7 +140,7 @@ function addLog(accion, empleadoAsociado = "General") {
     accion: accion,
     owner: currentUser || "sistema"
   });
-  syncToFirebase();
+  saveStorage("app_auditLogs", auditLogs);
 }
 
 // NUEVA FUNCIÓN CON COMPRESIÓN DE IMÁGENES AUTOMÁTICA
@@ -295,9 +228,9 @@ function logout() {
   applyAppTheme();
 }
 
-async function render(p) {
+function render(p) {
   current = p;
-  const userConfig = await loadUserConfig();
+  const userConfig = loadUserConfig();
   const pageTitle = document.getElementById("pageTitle");
   if (pageTitle) pageTitle.textContent = titles[p] || userConfig.appName;
 
@@ -334,7 +267,7 @@ async function render(p) {
       </div>
       <div class="card">${attendanceTable()}</div>`;
   } else if (p === "config") {
-    content.innerHTML = await renderConfigAndUsersModule();
+    content.innerHTML = renderConfigAndUsersModule();
   } else if (p === "historial") {
     content.innerHTML = renderHistorialModule();
   } else if (p === "vacaciones" || p === "ausencias") {
@@ -383,17 +316,17 @@ function saveNotificationContact() {
   if (userAcc) {
     userAcc.email = document.getElementById("notif_userEmail").value.trim();
     userAcc.whatsapp = document.getElementById("notif_userWp").value.trim();
-    syncToFirebase();
+    saveStorage("app_users", users);
     alert("¡Datos de contacto guardados correctamente!");
   }
 }
 
-async function sendWhatsAppAdmin() {
+function sendWhatsAppAdmin() {
   const adminAcc = users.find(u => u.role === "admin") || {};
   const msg = document.getElementById("notif_mensaje").value.trim();
   if (!msg) return alert("Por favor, ingresá un mensaje.");
 
-  const userConfig = await loadUserConfig();
+  const userConfig = loadUserConfig();
   const wpNum = adminAcc.whatsapp ? adminAcc.whatsapp.replace(/[^0-9]/g, '') : "";
   const text = encodeURIComponent(`*Notificación de ${currentUser} (${userConfig.appName}):*\n${msg}`);
   
@@ -404,12 +337,12 @@ async function sendWhatsAppAdmin() {
   }
 }
 
-async function sendEmailAdmin() {
+function sendEmailAdmin() {
   const adminAcc = users.find(u => u.role === "admin") || {};
   const msg = document.getElementById("notif_mensaje").value.trim();
   if (!msg) return alert("Por favor, ingresá un mensaje.");
 
-  const userConfig = await loadUserConfig();
+  const userConfig = loadUserConfig();
   const targetEmail = adminAcc.email || "";
   const subject = encodeURIComponent(`Alerta / Notificación de ${currentUser} - ${userConfig.appName}`);
   const body = encodeURIComponent(`${msg}\n\nEnviado desde la plataforma ${userConfig.appName}`);
@@ -418,9 +351,9 @@ async function sendEmailAdmin() {
 }
 
 // --- CONFIGURACIÓN Y PERSONALIZACIÓN DE USUARIO ---
-async function renderConfigAndUsersModule() {
+function renderConfigAndUsersModule() {
   const adminAccount = users.find(u => u.role === "admin") || { user: "admin", pass: "1234", nombre: "Administrador" };
-  const userConfig = await loadUserConfig();
+  const userConfig = loadUserConfig();
 
   let userRows = users.map((u, i) => `
     <tr>
@@ -503,7 +436,7 @@ function saveAdminCredentials() {
     adminAcc.nombre = newName;
     adminAcc.user = newUser;
     adminAcc.pass = newPass;
-    syncToFirebase();
+    saveStorage("app_users", users);
     updateHeaderUserInfo();
     addLog("Se actualizaron las credenciales y clave de Administrador.");
     alert("¡Credenciales de administrador actualizadas con éxito!");
@@ -513,7 +446,7 @@ function saveAdminCredentials() {
 
 async function saveSystemCustomization() {
   try {
-    let userConfig = await loadUserConfig();
+    let userConfig = loadStorage(`app_config_${currentUser}`, { ...defaultConfig });
 
     const nameInput = document.getElementById("cfg_appName");
     const colorInput = document.getElementById("cfg_color");
@@ -528,15 +461,17 @@ async function saveSystemCustomization() {
       userConfig.primaryColor = colorInput.value;
     }
 
+    // Procesar Fondo con compresión
     if (bgInput && bgInput.files && bgInput.files[0]) {
       userConfig.bgImage = await getBase64(bgInput.files[0], 1200, 0.6);
     }
 
+    // Procesar Logo con compresión
     if (logoInput && logoInput.files && logoInput.files[0]) {
       userConfig.appLogoImg = await getBase64(logoInput.files[0], 400, 0.7);
     }
 
-    await saveUserConfig(userConfig);
+    saveStorage(`app_config_${currentUser}`, userConfig);
     applyAppTheme();
     addLog(`Se actualizó la apariencia individual de ${currentUser}.`);
     alert("¡Personalización individual guardada con éxito!");
@@ -598,7 +533,7 @@ async function saveEmployee() {
   };
 
   employees.push(empData);
-  syncToFirebase();
+  saveStorage("app_employees", employees);
   addLog(`Alta de empleado Legajo N°: ${leg} (${n})`, n);
   closeModal();
   render(current);
@@ -668,17 +603,17 @@ function deleteEmployee(id) {
   const emp = employees.find(x => x.id === id);
   if (confirm(`¿Eliminar definitivamente el legajo de ${emp ? emp.nombre : 'este empleado'}?`)) {
     employees = employees.filter(x => x.id !== id);
-    syncToFirebase();
+    saveStorage("app_employees", employees);
     addLog(`Legajo de empleado eliminado: ${emp ? emp.nombre : id}`);
     render(current);
   }
 }
 
 // --- DESCARGA / VISTA DE HISTORIAL COMPLETO DE EMPLEADO (IMPRESIÓN / PDF) ---
-async function descargarHistorialPDF(id) {
+function descargarHistorialPDF(id) {
   const emp = employees.find(e => e.id === id);
   if (!emp) return;
-  const userConfig = await loadUserConfig();
+  const userConfig = loadUserConfig();
 
   const empAttendance = attendance.filter(a => a.empId === id);
   const empVacaciones = (records.vacaciones || []).filter(r => r.f0 === emp.nombre);
@@ -823,7 +758,7 @@ function limpiarHistorialAuditoria() {
   if (!checkAdminPassword()) return;
   if (confirm("¿Estás seguro de vaciar completamente el registro de auditoría del sistema?")) {
     auditLogs = [{ id: Date.now(), fechaHora: new Date().toLocaleString("es-AR"), usuario: currentUser, empleado: "Sistema", accion: "Historial de auditoría reiniciado por administrador.", owner: currentUser }];
-    syncToFirebase();
+    saveStorage("app_auditLogs", auditLogs);
     render("historial");
   }
 }
@@ -886,7 +821,7 @@ function processRemoteAttendance(tipo) {
         }
       }
 
-      syncToFirebase();
+      saveStorage("app_attendance", attendance);
       addLog(`Asistencia (${tipo}) registrada por GPS`, emp ? emp.nombre : 'General');
       alert(`¡${tipo} confirmada exitosamente con ubicación GPS!`);
       closeModal();
@@ -982,7 +917,7 @@ async function saveRecordRango(key) {
     owner: currentUser
   });
 
-  syncToFirebase();
+  saveStorage("app_records", records);
   addLog(`Nuevo registro en ${titles[key] || key}`, empNombre);
   closeModal();
   render(current);
@@ -1041,7 +976,7 @@ async function saveRecordGeneric(key) {
     owner: currentUser
   });
 
-  syncToFirebase();
+  saveStorage("app_records", records);
   addLog(`Nuevo registro en ${titles[key] || key}`, empNombre);
   closeModal();
   render(current);
@@ -1060,7 +995,7 @@ function deleteRecord(key, id) {
   if (!checkAdminPassword()) return;
   if (confirm("¿Deseas eliminar este registro?")) {
     records[key] = records[key].filter(r => r.id !== id);
-    syncToFirebase();
+    saveStorage("app_records", records);
     render(current);
   }
 }
@@ -1069,7 +1004,7 @@ function deleteAttendance(id) {
   if (!checkAdminPassword()) return;
   if (confirm("¿Deseas eliminar esta asistencia?")) {
     attendance = attendance.filter(a => a.id !== id);
-    syncToFirebase();
+    saveStorage("app_attendance", attendance);
     render("asistencia");
   }
 }
@@ -1099,7 +1034,7 @@ function saveNewUser() {
   if (!u || !p) return alert("Por favor complete usuario y contraseña.");
 
   users.push({ user: u, pass: p, role: r, nombre: n, email: "", whatsapp: "" });
-  syncToFirebase();
+  saveStorage("app_users", users);
   addLog(`Cuenta creada: ${u}`);
   closeModal();
   render("config");
@@ -1109,7 +1044,7 @@ function deleteUser(index) {
   if (!checkAdminPassword()) return;
   if (confirm("¿Deseas eliminar esta cuenta de usuario?")) {
     users.splice(index, 1);
-    syncToFirebase();
+    saveStorage("app_users", users);
     render("config");
   }
 }
