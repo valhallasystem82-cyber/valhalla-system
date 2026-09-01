@@ -1,310 +1,77 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Valhalla System Capital Humano</title>
-  <style>
-    :root { --primary-color: #0878ee; }
-    body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f6f9; color: #333; }
-    .hidden { display: none !important; }
-    #login { display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #071a33, var(--primary-color)); }
-    .login-card { background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); width: 320px; }
-    .login-card input { width: 100%; padding: 10px; margin: 8px 0 16px 0; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; }
-    #app { display: flex; min-height: 100vh; }
-    .sidebar { width: 260px; background: #1e293b; color: #fff; padding: 20px; display: flex; flex-direction: column; }
-    .sidebar-brand { display: flex; align-items: center; gap: 10px; font-weight: bold; margin-bottom: 20px; }
-    .logo-box { width: 35px; height: 35px; background: var(--primary-color); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; }
-    .nav-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
-    .nav-list button { width: 100%; text-align: left; background: transparent; color: #94a3b8; border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer; }
-    .nav-list button.active, .nav-list button:hover { background: var(--primary-color); color: #fff; }
-    .main-content { flex: 1; padding: 20px 30px; overflow-y: auto; }
-    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; }
-    .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    button.primary { background: var(--primary-color); color: #fff; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; }
-    button.secondary { background: #fff; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-    button.danger { background: #ef4444; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-    .table-wrap { overflow-x: auto; }
-    .table { width: 100%; border-collapse: collapse; text-align: left; }
-    .table th, .table td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
-    .table th { background: #f8fafc; }
-    .muted { color: #64748b; font-size: 14px; }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .form-grid label { display: flex; flex-direction: column; font-size: 13px; font-weight: bold; }
-    .form-grid label.full { grid-column: span 2; }
-    .form-grid input, .form-grid select { padding: 8px; border: 1px solid #ccc; border-radius: 6px; margin-top: 4px; }
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-    .modal-content { background: #fff; padding: 24px; border-radius: 10px; max-width: 600px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative; }
-    .close-modal { position: absolute; top: 15px; right: 15px; border: none; background: transparent; font-size: 20px; cursor: pointer; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Capital Humano</title>
+<link rel="stylesheet" href="style.css">
+<!-- Librería para la generación de informes en PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-
-  <!-- PANTALLA DE LOGIN -->
-  <div id="login">
-    <div class="login-card">
-      <h2 style="margin-top:0;">Iniciar Sesión</h2>
-      <form id="loginForm">
-        <label class="muted">Usuario</label>
-        <input type="text" id="loginUser" required placeholder="admin o usuario">
-        
-        <label class="muted">Contraseña</label>
-        <input type="password" id="loginPass" required placeholder="••••">
-        
-        <button type="submit" class="primary" style="width:100%;">Ingresar</button>
-      </form>
-    </div>
+<div id="login" class="login-screen">
+  <div class="login-card">
+    <div class="brand-mark" id="appLogo">CH</div>
+    <h1 id="appTitleHeader">Capital Humano</h1>
+    <p>Plataforma de gestión integral</p>
+    <form onsubmit="return login(event)">
+      <label>Usuario</label>
+      <input type="text" id="loginUser" required placeholder="Ingrese su usuario">
+      
+      <label>Contraseña</label>
+      <input type="password" id="loginPass" required placeholder="Ingrese su clave">
+      
+      <button type="submit" class="primary">Iniciar Sesión</button>
+    </form>
   </div>
+</div>
 
-  <!-- APLICACIÓN PRINCIPAL -->
-  <div id="app" class="hidden">
-    <aside class="sidebar">
-      <div class="sidebar-brand">
-        <div id="sidebarLogo" class="logo-box">CH</div>
-        <span id="sidebarTitle">Capital Humano</span>
+<div id="app" class="app hidden">
+  <aside class="sidebar">
+    <div class="brand">
+      <span id="sidebarLogo">CH</span>
+      <div>
+        <b id="sidebarTitle">Capital Humano</b>
+        <small>Gestión integral</small>
       </div>
-      <ul class="nav-list" id="nav">
-        <li><button data-page="dashboard" class="active">Dashboard</button></li>
-        <li><button data-page="personal">Administración de personal</button></li>
-        <li><button data-page="asistencia">Control de asistencia</button></li>
-        <li><button data-page="legajos">Legajos digitales</button></li>
-        <li><button data-page="vacaciones">Vacaciones y licencias</button></li>
-        <li><button data-page="ausencias">Ausencias</button></li>
-        <li><button data-page="seguridad">Higiene y seguridad</button></li>
-        <li><button data-page="salud">Salud ocupacional</button></li>
-        <li><button data-page="desempeno">Gestión de desempeño</button></li>
-        <li><button data-page="capacitaciones">Capacitaciones</button></li>
-        <li><button data-page="encuestas">Encuestas de clima</button></li>
-        <li><button data-page="recibos">Recibos de sueldo</button></li>
-        <li><button data-page="historial">Historial de sistema</button></li>
-        <li><button data-page="config">Configuración</button></li>
-      </ul>
-    </aside>
-
-    <main class="main-content">
-      <header class="header">
-        <div>
-          <h2 id="pageTitle" style="margin:0;">Dashboard</h2>
-          <small id="date" class="muted"></small>
-        </div>
-        <div style="display:flex; align-items:center; gap:12px;">
-          <div style="text-align:right;">
-            <div id="userNameDisplay" style="font-weight:bold;">Usuario</div>
-            <div id="userRoleDisplay" class="muted" style="font-size:12px;">Rol</div>
-          </div>
-          <button class="secondary" style="color:red; border-color:#fca5a5" id="btnLogout">Salir</button>
-        </div>
-      </header>
-
-      <section id="content"></section>
-    </main>
-  </div>
-
-  <!-- MODAL GLOBAL -->
-  <div id="modal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <button class="close-modal" id="btnCloseModal">✕</button>
-      <div id="modalBody"></div>
     </div>
-  </div>
+    <nav id="nav">
+      <button class="active" data-page="dashboard">⌂ <span>Dashboard</span></button>
+      <button data-page="personal">👥 <span>Administración de personal</span></button>
+      <button data-page="asistencia">🕐 <span>Control de asistencia</span></button>
+      <button data-page="seguridad">🛡 <span>Higiene y seguridad</span></button>
+      <button data-page="salud">♥ <span>Salud ocupacional</span></button>
+      <button data-page="desempeno">★ <span>Gestión de desempeño</span></button>
+      <button data-page="capacitaciones">🎓 <span>Capacitaciones</span></button>
+      <button data-page="encuestas">☷ <span>Encuestas de clima</span></button>
+      <button data-page="legajos">📁 <span>Legajos digitales</span></button>
+      <button data-page="vacaciones">🏖 <span>Vacaciones y licencias</span></button>
+      <button data-page="recibos">▣ <span>Recibos de sueldo</span></button>
+      <button data-page="ausencias">⚠ <span>Ausencias</span></button>
+      <button data-page="historial">📜 <span>Historial de sistema</span></button>
+      <button data-page="config">⚙ <span>Configuración</span></button>
+    </nav>
+    <div class="side-bottom"><button onclick="logout()">↪ Cerrar sesión</button></div>
+  </aside>
 
-  <!-- FIREBASE Y LÓGICA DE APLICACIÓN -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  <main class="main">
+    <header class="topbar">
+      <button class="menu-btn" onclick="toggleSide()">☰</button>
+      <div><b id="pageTitle">Dashboard</b><small id="date"></small></div>
+      <div class="top-actions">
+        <span class="bell" onclick="openNotificationModal()" title="Configurar Notificaciones">🔔</span>
+        <div class="avatar" id="userAvatar">A</div>
+        <div>
+          <b id="userNameDisplay">Administrador</b>
+          <small id="userRoleDisplay">RRHH</small>
+        </div>
+      </div>
+    </header>
+    <section id="content" class="content"></section>
+  </main>
+</div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDfIpnc7I2gwbnSE7-wRgtCUeI2_NfSbh0",
-      authDomain: "valhala-system-cappital-humano.firebaseapp.com",
-      projectId: "valhala-system-cappital-humano",
-      storageBucket: "valhala-system-cappital-humano.firebasestorage.app",
-      messagingSenderId: "108221107760",
-      appId: "1:108221107760:web:b79dc919cd72b5f81f27f5"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    let currentUser = null;
-    let currentUserRole = "admin";
-
-    let users = [
-      { user: "admin", pass: "1234", role: "admin", nombre: "Administrador General" },
-      { user: "usuario", pass: "1234", role: "usuario", nombre: "Usuario Operativo" }
-    ];
-
-    let employees = [];
-    let attendance = [];
-    let current = "dashboard";
-
-    function initRealtimeSync() {
-      const docRef = doc(db, "app_data", "main_store");
-      onSnapshot(docRef, (snapshot) => {
-        if (snapshot.exists()) {
-          const data = snapshot.data();
-          if (data.users && data.users.length) users = data.users;
-          employees = data.employees || [];
-          attendance = data.attendance || [];
-          if (currentUser) render(current);
-        } else {
-          syncToFirebase();
-        }
-      }, (err) => {
-        console.error("Error al conectar con Firestore:", err);
-      });
-    }
-
-    async function syncToFirebase() {
-      try {
-        const cleanData = JSON.parse(JSON.stringify({ users, employees, attendance }));
-        await setDoc(doc(db, "app_data", "main_store"), cleanData, { merge: true });
-      } catch (err) {
-        console.error("Error al guardar en Firestore:", err);
-      }
-    }
-
-    window.login = function(e) {
-      if (e) e.preventDefault();
-      const u = document.getElementById("loginUser").value.trim().toLowerCase();
-      const p = document.getElementById("loginPass").value.trim();
-      const found = users.find(acc => acc.user.toLowerCase() === u && acc.pass === p);
-
-      if (found) {
-        currentUser = found.user;
-        currentUserRole = found.role;
-        document.getElementById("login").classList.add("hidden");
-        document.getElementById("app").classList.remove("hidden");
-        document.getElementById("userNameDisplay").textContent = found.nombre || found.user;
-        document.getElementById("userRoleDisplay").textContent = found.role === 'admin' ? 'Administrador' : 'Usuario Operativo';
-        render("dashboard");
-      } else {
-        alert("Usuario o clave incorrectos.");
-      }
-      return false;
-    };
-
-    window.logout = function() {
-      currentUser = null;
-      document.getElementById("app").classList.add("hidden");
-      document.getElementById("login").classList.remove("hidden");
-    };
-
-    window.closeModal = function() {
-      document.getElementById("modal").classList.add("hidden");
-    };
-
-    window.eliminarEmpleado = function(id) {
-      if (confirm("¿Confirmas que deseas eliminar este empleado?")) {
-        employees = employees.filter(e => e.id !== id);
-        syncToFirebase();
-        render("personal");
-      }
-    };
-
-    function render(p) {
-      current = p;
-      const content = document.getElementById("content");
-      const pageTitle = document.getElementById("pageTitle");
-      if (!content) return;
-
-      if (pageTitle) pageTitle.textContent = p.charAt(0).toUpperCase() + p.slice(1);
-
-      if (p === "dashboard") {
-        content.innerHTML = `
-          <div class="card">
-            <h1>Dashboard General</h1>
-            <p>Bienvenido <b>${currentUser}</b>.</p>
-            <p>Empleados activos registrados: <b>${employees.length}</b></p>
-          </div>`;
-      } 
-      else if (p === "personal") {
-        content.innerHTML = `
-          <div class="card">
-            <h3>Cargar Datos Personales</h3>
-            <form id="formEmpleado" class="form-grid">
-              <label>Nombre Completo <input type="text" id="empNombre" required></label>
-              <label>DNI / Documento <input type="text" id="empDni" required></label>
-              <label>Puesto / Cargo <input type="text" id="empPuesto" required></label>
-              <label>Área / Departamento <input type="text" id="empArea" required></label>
-              <label class="full">
-                <button type="submit" class="primary" style="margin-top: 10px;">Guardar Empleado</button>
-              </label>
-            </form>
-          </div>
-
-          <div class="card">
-            <h3>Personal Registrado</h3>
-            <div class="table-wrap">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>DNI</th>
-                    <th>Puesto</th>
-                    <th>Área</th>
-                    <th>Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${employees.length === 0 
-                    ? '<tr><td colspan="5" class="muted">No hay empleados registrados.</td></tr>' 
-                    : employees.map(e => `
-                        <tr>
-                          <td>${e.nombre}</td>
-                          <td>${e.dni}</td>
-                          <td>${e.puesto}</td>
-                          <td>${e.area}</td>
-                          <td>
-                            <button class="danger" onclick="eliminarEmpleado('${e.id}')">Eliminar</button>
-                          </td>
-                        </tr>
-                      `).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>`;
-
-        document.getElementById("formEmpleado").addEventListener("submit", (e) => {
-          e.preventDefault();
-          const nuevo = {
-            id: Date.now().toString(),
-            nombre: document.getElementById("empNombre").value,
-            dni: document.getElementById("empDni").value,
-            puesto: document.getElementById("empPuesto").value,
-            area: document.getElementById("empArea").value
-          };
-
-          employees.push(nuevo);
-          syncToFirebase();
-          render("personal");
-        });
-      } 
-      else {
-        content.innerHTML = `
-          <div class="card">
-            <h1>Módulo: ${p}</h1>
-            <p>Sección configurada y lista para operar.</p>
-          </div>`;
-      }
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      initRealtimeSync();
-      document.getElementById("loginForm").addEventListener("submit", window.login);
-      document.getElementById("btnLogout").addEventListener("click", window.logout);
-      document.getElementById("btnCloseModal").addEventListener("click", window.closeModal);
-
-      const nav = document.getElementById("nav");
-      if (nav) {
-        nav.addEventListener("click", (e) => {
-          const btn = e.target.closest("button");
-          if (!btn) return;
-          document.querySelectorAll("#nav button").forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
-          render(btn.getAttribute("data-page"));
-        });
-      }
-    });
-  </script>
+<div id="modal" class="modal hidden"><div class="modal-card"><button class="close" onclick="closeModal()">×</button><div id="modalBody"></div></div></div>
+<script src="script.js"></script>
 </body>
 </html>
