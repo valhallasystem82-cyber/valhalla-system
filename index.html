@@ -5,166 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Valhalla System Capital Humano</title>
   <style>
-    :root {
-      --primary-color: #0878ee;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background-color: #f4f6f9;
-      color: #333;
-    }
+    :root { --primary-color: #0878ee; }
+    body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f6f9; color: #333; }
     .hidden { display: none !important; }
-    
-    /* Layout */
-    #login {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background: linear-gradient(135deg, #071a33, var(--primary-color));
-    }
-    .login-card {
-      background: #fff;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      width: 320px;
-    }
-    .login-card input {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0 16px 0;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-    #app {
-      display: flex;
-      min-height: 100vh;
-    }
-    .sidebar {
-      width: 260px;
-      background: #1e293b;
-      color: #fff;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-    }
-    .sidebar-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-    .logo-box {
-      width: 35px;
-      height: 35px;
-      background: var(--primary-color);
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-weight: bold;
-    }
-    .nav-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .nav-list button {
-      width: 100%;
-      text-align: left;
-      background: transparent;
-      color: #94a3b8;
-      border: none;
-      padding: 10px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .nav-list button.active, .nav-list button:hover {
-      background: var(--primary-color);
-      color: #fff;
-    }
-    .main-content {
-      flex: 1;
-      padding: 20px 30px;
-      overflow-y: auto;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 15px;
-      margin-bottom: 20px;
-    }
-    
-    /* Componentes */
-    .card {
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    button.primary {
-      background: var(--primary-color);
-      color: #fff;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    button.secondary {
-      background: #fff;
-      border: 1px solid #cbd5e1;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+    #login { display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #071a33, var(--primary-color)); }
+    .login-card { background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); width: 320px; }
+    .login-card input { width: 100%; padding: 10px; margin: 8px 0 16px 0; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; }
+    #app { display: flex; min-height: 100vh; }
+    .sidebar { width: 260px; background: #1e293b; color: #fff; padding: 20px; display: flex; flex-direction: column; }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; font-weight: bold; margin-bottom: 20px; }
+    .logo-box { width: 35px; height: 35px; background: var(--primary-color); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; }
+    .nav-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+    .nav-list button { width: 100%; text-align: left; background: transparent; color: #94a3b8; border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer; }
+    .nav-list button.active, .nav-list button:hover { background: var(--primary-color); color: #fff; }
+    .main-content { flex: 1; padding: 20px 30px; overflow-y: auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; }
+    .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    button.primary { background: var(--primary-color); color: #fff; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; }
+    button.secondary { background: #fff; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
     .table-wrap { overflow-x: auto; }
     .table { width: 100%; border-collapse: collapse; text-align: left; }
     .table th, .table td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
     .table th { background: #f8fafc; }
     .badge { background: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
-    .badge.red { background: #fecaca; color: #991b1b; }
     .muted { color: #64748b; font-size: 14px; }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .form-grid label { display: flex; flex-direction: column; font-size: 13px; font-weight: bold; }
     .form-grid label.full { grid-column: span 2; }
     .form-grid input, .form-grid select { padding: 8px; border: 1px solid #ccc; border-radius: 6px; margin-top: 4px; }
-    
-    /* Modal */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    .modal-content {
-      background: #fff;
-      padding: 24px;
-      border-radius: 10px;
-      max-width: 600px;
-      width: 90%;
-      max-height: 85vh;
-      overflow-y: auto;
-      position: relative;
-    }
-    .close-modal {
-      position: absolute;
-      top: 15px; right: 15px;
-      border: none; background: transparent;
-      font-size: 20px; cursor: pointer;
-    }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: #fff; padding: 24px; border-radius: 10px; max-width: 600px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative; }
+    .close-modal { position: absolute; top: 15px; right: 15px; border: none; background: transparent; font-size: 20px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -173,7 +44,7 @@
   <div id="login">
     <div class="login-card">
       <h2 style="margin-top:0;">Iniciar Sesión</h2>
-      <form onsubmit="return login(event)">
+      <form id="loginForm">
         <label class="muted">Usuario</label>
         <input type="text" id="loginUser" required placeholder="admin o usuario">
         
@@ -217,13 +88,13 @@
           <small id="date" class="muted"></small>
         </div>
         <div style="display:flex; align-items:center; gap:12px;">
-          <button class="secondary" onclick="openNotificationModal()">🔔 Alertas</button>
+          <button class="secondary" id="btnAlertas">🔔 Alertas</button>
           <div style="text-align:right;">
             <div id="userNameDisplay" style="font-weight:bold;">Usuario</div>
             <div id="userRoleDisplay" class="muted" style="font-size:12px;">Rol</div>
           </div>
           <div id="userAvatar" class="logo-box" style="border-radius:50%;">U</div>
-          <button class="secondary" style="color:red; border-color:#fca5a5" onclick="logout()">Salir</button>
+          <button class="secondary" style="color:red; border-color:#fca5a5" id="btnLogout">Salir</button>
         </div>
       </header>
 
@@ -234,17 +105,16 @@
   <!-- MODAL GLOBAL -->
   <div id="modal" class="modal-overlay hidden">
     <div class="modal-content">
-      <button class="close-modal" onclick="closeModal()">✕</button>
+      <button class="close-modal" id="btnCloseModal">✕</button>
       <div id="modalBody"></div>
     </div>
   </div>
 
-  <!-- FIREBASE Y LÓGICA DE LA APLICACIÓN -->
+  <!-- FIREBASE Y LÓGICA MÓDULO -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // Configuración de Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDfIpnc7I2gwbnSE7-wRgtCUeI2_NfSbh0",
       authDomain: "valhala-system-cappital-humano.firebaseapp.com",
@@ -257,14 +127,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // --- ESTADO GLOBAL ---
-    const defaultConfig = {
-      appName: "Valhalla System Capital Humano",
-      primaryColor: "#0878ee",
-      bgImage: "",
-      appLogoImg: "" 
-    };
-
     let currentUser = null;
     let currentUserRole = "admin";
 
@@ -276,24 +138,13 @@
     let employees = [];
     let attendance = [];
     let auditLogs = [];
-    let records = {
-      seguridad: [], salud: [], desempeno: [], capacitaciones: [], encuestas: [], recibos: [], vacaciones: [], ausencias: [], legajos: []
-    };
-
-    const titles = {
-      dashboard: "Dashboard", personal: "Administración de personal", asistencia: "Control de asistencia",
-      seguridad: "Higiene y seguridad", salud: "Salud ocupacional", desempeno: "Gestión de desempeño",
-      capacitaciones: "Capacitaciones", encuestas: "Encuestas de clima", legajos: "Legajos digitales",
-      vacaciones: "Vacaciones y licencias", recibos: "Recibos de sueldo", ausencias: "Ausencias",
-      historial: "Historial de sistema (Auditoría)", config: "Configuración y Personalización"
-    };
+    let records = { seguridad: [], salud: [], desempeno: [], capacitaciones: [], encuestas: [], recibos: [], vacaciones: [], ausencias: [], legajos: [] };
 
     let current = "dashboard";
 
-    // --- SINCRO REALTIME CON FIRESTORE ---
     function initRealtimeSync() {
-      // Escuchar Colección Principal
-      onSnapshot(doc(db, "app_data", "main_store"), (snapshot) => {
+      const docRef = doc(db, "app_data", "main_store");
+      onSnapshot(docRef, (snapshot) => {
         if (snapshot.exists()) {
           const data = snapshot.data();
           if (data.users && data.users.length) users = data.users;
@@ -302,190 +153,29 @@
           auditLogs = data.auditLogs || [];
           records = data.records || records;
           
-          if (currentUser) {
-            render(current);
-          }
+          if (currentUser) render(current);
         } else {
-          // Crear documento inicial si está vacío
           syncToFirebase();
         }
-      }, (error) => {
-        console.error("Error en lectura Firebase:", error);
+      }, (err) => {
+        console.error("Error al sincronizar con Firestore:", err);
       });
     }
 
     async function syncToFirebase() {
       try {
-        // Limpiar objetos de valores undefined antes de enviar a Firebase
-        const cleanData = JSON.parse(JSON.stringify({
-          users, employees, attendance, auditLogs, records
-        }));
-
+        const cleanData = JSON.parse(JSON.stringify({ users, employees, attendance, auditLogs, records }));
         await setDoc(doc(db, "app_data", "main_store"), cleanData, { merge: true });
-        console.log("Sincronizado con Firebase Firestore con éxito.");
-      } catch (error) {
-        console.error("Error al guardar en Firebase:", error);
+      } catch (err) {
+        console.error("Error al escribir datos en Firebase:", err);
       }
     }
 
-    async function loadUserConfig() {
-      if (!currentUser) return defaultConfig;
-      try {
-        const docSnap = await getDoc(doc(db, "user_configs", currentUser));
-        if (docSnap.exists()) return docSnap.data();
-      } catch (error) {
-        console.error("Error al cargar configuración:", error);
-      }
-      return defaultConfig;
-    }
-
-    async function saveUserConfig(configData) {
-      if (!currentUser) return;
-      try {
-        const cleanConfig = JSON.parse(JSON.stringify(configData));
-        await setDoc(doc(db, "user_configs", currentUser), cleanConfig);
-      } catch (error) {
-        console.error("Error al guardar configuración:", error);
-      }
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      initRealtimeSync();
-      applyAppTheme();
-
-      const dateEl = document.getElementById("date");
-      if (dateEl) {
-        dateEl.textContent = new Date().toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-      }
-
-      const nav = document.getElementById("nav");
-      if (nav) {
-        nav.addEventListener("click", (e) => {
-          const btn = e.target.closest("button");
-          if (!btn) return;
-          const page = btn.getAttribute("data-page");
-          if (page) {
-            document.querySelectorAll("#nav button").forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            render(page);
-          }
-        });
-      }
-    });
-
-    async function applyAppTheme() {
-      const userConfig = await loadUserConfig();
-
-      const sidebarTitle = document.getElementById("sidebarTitle");
-      if (sidebarTitle) sidebarTitle.textContent = userConfig.appName;
-      document.title = userConfig.appName;
-
-      document.documentElement.style.setProperty('--primary-color', userConfig.primaryColor);
-
-      const sidebarLogo = document.getElementById("sidebarLogo");
-      if (userConfig.appLogoImg) {
-        if (sidebarLogo) sidebarLogo.innerHTML = `<img src="${userConfig.appLogoImg}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`;
-      } else {
-        if (sidebarLogo) sidebarLogo.textContent = "CH";
-      }
-
-      const loginScreen = document.getElementById("login");
-      if (loginScreen) {
-        loginScreen.style.backgroundImage = userConfig.bgImage ? `url('${userConfig.bgImage}')` : `linear-gradient(135deg, #071a33, ${userConfig.primaryColor})`;
-        loginScreen.style.backgroundSize = "cover";
-        loginScreen.style.backgroundPosition = "center";
-      }
-
-      const appScreen = document.getElementById("app");
-      if (appScreen) {
-        if (userConfig.bgImage) {
-          appScreen.style.backgroundImage = `url('${userConfig.bgImage}')`;
-          appScreen.style.backgroundSize = "cover";
-          appScreen.style.backgroundAttachment = "fixed";
-        } else {
-          appScreen.style.backgroundImage = "none";
-          appScreen.style.backgroundColor = ""; 
-        }
-      }
-    }
-
-    function updateHeaderUserInfo() {
-      const userAcc = users.find(u => u.user === currentUser);
-      const nameDisp = document.getElementById("userNameDisplay");
-      const roleDisp = document.getElementById("userRoleDisplay");
-      const avatar = document.getElementById("userAvatar");
-
-      if (userAcc) {
-        if (nameDisp) nameDisp.textContent = userAcc.nombre || userAcc.user;
-        if (roleDisp) roleDisp.textContent = userAcc.role === 'admin' ? 'Administrador' : 'Usuario Operativo';
-        if (avatar) avatar.textContent = (userAcc.nombre || userAcc.user).charAt(0).toUpperCase();
-      }
-    }
-
-    function addLog(accion, empleadoAsociado = "General") {
-      auditLogs.unshift({ 
-        id: Date.now(), 
-        fechaHora: new Date().toLocaleString("es-AR"), 
-        usuario: currentUser || "Anonimo", 
-        empleado: empleadoAsociado,
-        accion: accion,
-        owner: currentUser || "sistema"
-      });
-      syncToFirebase();
-    }
-
-    function getBase64(file, maxWidth = 800, quality = 0.7) {
-      return new Promise((resolve, reject) => {
-        if (!file) return resolve("");
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (event) => {
-          const img = new Image();
-          img.src = event.target.result;
-          img.onload = () => {
-            const canvas = document.createElement("canvas");
-            let width = img.width;
-            let height = img.height;
-
-            if (width > maxWidth) {
-              height = Math.round((height * maxWidth) / width);
-              width = maxWidth;
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0, width, height);
-
-            const compressedBase64 = canvas.toDataURL("image/jpeg", quality);
-            resolve(compressedBase64);
-          };
-          img.onerror = (error) => reject(error);
-        };
-        reader.onerror = (error) => reject(error);
-      });
-    }
-
-    function checkAdminPassword() {
-      const adminAcc = users.find(u => u.role === "admin");
-      const passPrompt = prompt("🔐 Confirmación de seguridad: Ingrese la clave de Administrador:");
-      if (!passPrompt) return false;
-      if (adminAcc && passPrompt === adminAcc.pass) {
-        return true;
-      }
-      alert("❌ Clave de administrador incorrecta.");
-      return false;
-    }
-
-    window.login = function(event) {
-      if (event) event.preventDefault();
-      const uInput = document.getElementById("loginUser");
-      const pInput = document.getElementById("loginPass");
-
-      const u = uInput ? uInput.value.trim().toLowerCase() : "";
-      const p = pInput ? pInput.value.trim() : "";
-
+    // Funciones globales expuestas al ámbito 'window' para eventos HTML dinámicos
+    window.login = function(e) {
+      if(e) e.preventDefault();
+      const u = document.getElementById("loginUser").value.trim().toLowerCase();
+      const p = document.getElementById("loginPass").value.trim();
       const found = users.find(account => account.user.trim().toLowerCase() === u && account.pass.trim() === p);
 
       if (found) {
@@ -493,558 +183,55 @@
         currentUserRole = found.role;
         document.getElementById("login").classList.add("hidden");
         document.getElementById("app").classList.remove("hidden");
-        if (pInput) pInput.value = ""; 
-        updateHeaderUserInfo();
-        applyAppTheme();
-        addLog(`Sesión iniciada por usuario: ${found.user}`);
+        document.getElementById("userNameDisplay").textContent = found.nombre || found.user;
+        document.getElementById("userRoleDisplay").textContent = found.role === 'admin' ? 'Administrador' : 'Usuario Operativo';
         render("dashboard");
-        return false;
+      } else {
+        alert("Usuario o contraseña incorrectos.");
       }
-      alert("Usuario o contraseña incorrectos.");
       return false;
     };
 
     window.logout = function() {
-      addLog("Cierre de sesión.");
       currentUser = null;
-      currentUserRole = "admin";
       document.getElementById("app").classList.add("hidden");
       document.getElementById("login").classList.remove("hidden");
-      applyAppTheme();
-    };
-
-    async function render(p) {
-      current = p;
-      const userConfig = await loadUserConfig();
-      const pageTitle = document.getElementById("pageTitle");
-      if (pageTitle) pageTitle.textContent = titles[p] || userConfig.appName;
-
-      const content = document.getElementById("content");
-      if (!content) return;
-
-      const filteredEmployees = employees.filter(e => currentUserRole === 'admin' ? true : e.owner === currentUser);
-
-      if (p === "dashboard") {
-        content.innerHTML = `
-          <div class="welcome"><div><h1>Dashboard</h1><div class="muted">Bienvenido (${currentUserRole === 'admin' ? 'Administrador' : 'Usuario'}).</div></div></div>
-          <div style="margin-top:15px;" class="card">
-            <span class="muted">Total Empleados: </span><b>${filteredEmployees.length}</b>
-          </div>
-          <div class="card" style="margin-top:18px"><h3>Personal reciente</h3>${employeeTable(5)}</div>`;
-      } else if (p === "personal" || p === "legajos") {
-        content.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h1>${titles[p]}</h1>
-            <button class="primary" onclick="openEmployee()">+ Nuevo empleado</button>
-          </div>
-          <div style="margin-bottom:15px;">
-            <input id="empSearch" style="padding:8px; width:250px; border:1px solid #ccc; border-radius:6px;" placeholder="Buscar empleado..." onkeyup="filterEmployees()">
-          </div>
-          <div id="empTable" class="card">${employeeTable()}</div>`;
-      } else if (p === "asistencia") {
-        content.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h1>Control de asistencia</h1>
-            <div>
-              <button class="primary" style="background:#10b981; margin-right: 8px;" onclick="openRemoteAttendanceModal('Entrada')">📍 Fichar Entrada GPS</button>
-              <button class="primary" style="background:#ef4444;" onclick="openRemoteAttendanceModal('Salida')">📍 Fichar Salida GPS</button>
-            </div>
-          </div>
-          <div class="card">${attendanceTable()}</div>`;
-      } else if (p === "config") {
-        content.innerHTML = await renderConfigAndUsersModule();
-      } else if (p === "historial") {
-        content.innerHTML = renderHistorialModule();
-      } else if (p === "vacaciones" || p === "ausencias") {
-        content.innerHTML = renderRangoDatesModule(p, titles[p]);
-      } else {
-        content.innerHTML = renderCustomModule(p, titles[p] || p, ["Empleado / Título", "Detalle", "Estado", "Fecha / Periodo", "Comprobante / Foto"], `openGenericModal('${p}', 'Registrar ${titles[p]}')`);
-      }
-    }
-
-    // Exportar funciones globales
-    window.openNotificationModal = function() {
-      const userAcc = users.find(u => u.user === currentUser) || {};
-      openModal(`
-        <h2>🔔 Centro de Notificaciones y Alertas</h2>
-        <p class="muted">Vinculá tus canales para recibir avisos e informes del sistema.</p>
-        <div class="card" style="margin-bottom:15px; background:#f8fafc;">
-          <h4>Tus Datos de Contacto Directo</h4>
-          <div class="form-grid">
-            <label>Correo / Gmail<input type="email" id="notif_userEmail" value="${userAcc.email || ''}"></label>
-            <label>WhatsApp<input type="tel" id="notif_userWp" value="${userAcc.whatsapp || ''}"></label>
-          </div><br>
-          <button class="primary" onclick="saveNotificationContact()">Guardar Contacto</button>
-        </div>
-        <div class="card">
-          <h4>Enviar Reporte / Alerta al Administrador</h4>
-          <textarea id="notif_mensaje" style="width:100%; height:80px; padding:8px;" placeholder="Escriba su mensaje aquí..."></textarea>
-          <div style="display:flex; gap:10px; margin-top:10px;">
-            <button class="primary" style="background:#25D366;" onclick="sendWhatsAppAdmin()">💬 WhatsApp</button>
-            <button class="primary" style="background:#ea4335;" onclick="sendEmailAdmin()">✉️ Gmail</button>
-          </div>
-        </div>
-      `);
-    };
-
-    window.saveNotificationContact = function() {
-      const userAcc = users.find(u => u.user === currentUser);
-      if (userAcc) {
-        userAcc.email = document.getElementById("notif_userEmail").value.trim();
-        userAcc.whatsapp = document.getElementById("notif_userWp").value.trim();
-        syncToFirebase();
-        alert("¡Datos de contacto guardados correctamente!");
-      }
-    };
-
-    window.sendWhatsAppAdmin = async function() {
-      const adminAcc = users.find(u => u.role === "admin") || {};
-      const msg = document.getElementById("notif_mensaje").value.trim();
-      if (!msg) return alert("Por favor, ingresá un mensaje.");
-      const userConfig = await loadUserConfig();
-      const wpNum = adminAcc.whatsapp ? adminAcc.whatsapp.replace(/[^0-9]/g, '') : "";
-      const text = encodeURIComponent(`*Notificación de ${currentUser} (${userConfig.appName}):*\n${msg}`);
-      window.open(wpNum ? `https://wa.me/${wpNum}?text=${text}` : `https://wa.me/?text=${text}`, '_blank');
-    };
-
-    window.sendEmailAdmin = async function() {
-      const adminAcc = users.find(u => u.role === "admin") || {};
-      const msg = document.getElementById("notif_mensaje").value.trim();
-      if (!msg) return alert("Por favor, ingresá un mensaje.");
-      const userConfig = await loadUserConfig();
-      const targetEmail = adminAcc.email || "";
-      const subject = encodeURIComponent(`Alerta de ${currentUser} - ${userConfig.appName}`);
-      const body = encodeURIComponent(`${msg}\n\nEnviado desde ${userConfig.appName}`);
-      window.open(`mailto:${targetEmail}?subject=${subject}&body=${body}`, '_blank');
-    };
-
-    async function renderConfigAndUsersModule() {
-      const adminAccount = users.find(u => u.role === "admin") || { user: "admin", pass: "1234", nombre: "Administrador" };
-      const userConfig = await loadUserConfig();
-
-      let userRows = users.map((u, i) => `
-        <tr>
-          <td><b>${u.user}</b></td>
-          <td>${u.nombre}</td>
-          <td>${u.role}</td>
-          <td>${currentUserRole === 'admin' && u.role !== 'admin' ? `<button class="secondary" style="color:red;border-color:#fca5a5" onclick="deleteUser(${i})">Eliminar</button>` : 'Protegido'}</td>
-        </tr>`).join('');
-
-      return `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-          <h1>Configuración y Seguridad</h1>
-          ${currentUserRole === 'admin' ? `<button class="primary" onclick="openCreateUserModal()">+ Crear Cuenta</button>` : ''}
-        </div>
-        ${currentUserRole === 'admin' ? `
-        <div class="card" style="margin-bottom: 20px;">
-          <h3>🔐 Credenciales del Administrador</h3>
-          <div class="form-grid">
-            <label>Nombre<input id="cfg_adminNombre" value="${adminAccount.nombre}"></label>
-            <label>Usuario<input id="cfg_adminUser" value="${adminAccount.user}"></label>
-            <label>Nueva Clave<input type="password" id="cfg_adminPass" value="${adminAccount.pass}"></label>
-          </div><br>
-          <button class="primary" onclick="saveAdminCredentials()">Guardar Admin</button>
-        </div>` : ''}
-
-        <div class="card" style="margin-bottom: 20px;">
-          <h3>Personalizar Mi Cuenta</h3>
-          <div class="form-grid">
-            <label>Nombre Empresa/Sistema<input id="cfg_appName" value="${userConfig.appName}"></label>
-            <label>Color Principal<input type="color" id="cfg_color" value="${userConfig.primaryColor}" style="height:40px; padding:0;"></label>
-            <label>Mi Logo<input type="file" id="cfg_appLogoImg" accept="image/*"></label>
-            <label>Imagen Fondo<input type="file" id="cfg_bgImage" accept="image/*"></label>
-          </div><br>
-          <button class="primary" onclick="saveSystemCustomization()">Guardar Personalización</button>
-        </div>
-
-        <div class="card">
-          <h3>Cuentas de Usuarios</h3>
-          <div class="table-wrap"><table class="table">
-            <thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Acción</th></tr></thead>
-            <tbody>${userRows}</tbody>
-          </table></div>
-        </div>`;
-    }
-
-    window.saveAdminCredentials = function() {
-      if (currentUserRole !== 'admin') return alert("❌ Función solo disponible para Admin.");
-      const adminAcc = users.find(u => u.role === "admin");
-      const newName = document.getElementById("cfg_adminNombre").value.trim();
-      const newUser = document.getElementById("cfg_adminUser").value.trim();
-      const newPass = document.getElementById("cfg_adminPass").value.trim();
-      if (!newUser || !newPass) return alert("Campos incompletos.");
-      if (adminAcc) {
-        adminAcc.nombre = newName; adminAcc.user = newUser; adminAcc.pass = newPass;
-        syncToFirebase(); updateHeaderUserInfo();
-        addLog("Se actualizaron las credenciales de Administrador.");
-        alert("¡Credenciales actualizadas!"); render("config");
-      }
-    };
-
-    window.saveSystemCustomization = async function() {
-      try {
-        let userConfig = await loadUserConfig();
-        const nameInput = document.getElementById("cfg_appName");
-        const colorInput = document.getElementById("cfg_color");
-        const bgInput = document.getElementById("cfg_bgImage");
-        const logoInput = document.getElementById("cfg_appLogoImg");
-
-        if (nameInput && nameInput.value.trim()) userConfig.appName = nameInput.value.trim();
-        if (colorInput) userConfig.primaryColor = colorInput.value;
-        if (bgInput && bgInput.files && bgInput.files[0]) userConfig.bgImage = await getBase64(bgInput.files[0], 1200, 0.6);
-        if (logoInput && logoInput.files && logoInput.files[0]) userConfig.appLogoImg = await getBase64(logoInput.files[0], 400, 0.7);
-
-        await saveUserConfig(userConfig);
-        applyAppTheme();
-        addLog(`Se actualizó la apariencia individual.`);
-        alert("¡Personalización guardada con éxito!"); render("config");
-      } catch (e) {
-        console.error(e); alert("❌ Error al procesar imagen.");
-      }
-    };
-
-    window.openEmployee = function() {
-      openModal(`<h2>Nuevo Empleado</h2>
-        <div class="form-grid">
-          <label>N° Legajo<input id="newLegajoNum" placeholder="LEG-001"></label>
-          <label>Nombre<input id="newName"></label>
-          <label>DNI<input id="newDniNum"></label>
-          <label>Fecha Ingreso<input type="date" id="newFechaIngreso" value="${new Date().toISOString().split('T')[0]}"></label>
-          <label>Puesto<input id="newJob"></label>
-          <label>Sector<input id="newSector"></label>
-          <label>Teléfono<input id="newPhone"></label>
-          <label>Correo<input type="email" id="newEmail"></label>
-          <label class="full">Foto Perfil<input type="file" id="newPhoto" accept="image/*"></label>
-          <label class="full">Foto DNI<input type="file" id="newDniImg" accept="image/*"></label>
-          <label class="full">Antecedentes<input type="file" id="newAntecedentes" accept="image/*"></label>
-          <label class="full">Seguro de Vida<input type="file" id="newSeguro" accept="image/*"></label>
-        </div><br>
-        <button class="primary" onclick="saveEmployee()">Guardar Legajo</button>`);
-    };
-
-    window.saveEmployee = async function() {
-      const n = document.getElementById("newName").value.trim();
-      const leg = document.getElementById("newLegajoNum").value.trim();
-      if (!n || !leg) return alert("Complete Nombre y Legajo.");
-
-      const photoFile = document.getElementById("newPhoto").files[0];
-      const dniFile = document.getElementById("newDniImg").files[0];
-      const antFile = document.getElementById("newAntecedentes").files[0];
-      const segFile = document.getElementById("newSeguro").files[0];
-
-      employees.push({
-        id: Date.now(), legajo: leg, nombre: n,
-        dniNum: document.getElementById("newDniNum").value || "-",
-        fechaIngreso: document.getElementById("newFechaIngreso").value || "-",
-        puesto: document.getElementById("newJob").value || "General",
-        sector: document.getElementById("newSector").value || "General",
-        telefono: document.getElementById("newPhone").value || "",
-        email: document.getElementById("newEmail").value || "",
-        foto: photoFile ? await getBase64(photoFile, 500) : "",
-        fotoDni: dniFile ? await getBase64(dniFile, 800) : "",
-        fotoAntecedentes: antFile ? await getBase64(antFile, 800) : "",
-        fotoSeguro: segFile ? await getBase64(segFile, 800) : "",
-        owner: currentUser
-      });
-
-      syncToFirebase(); addLog(`Alta de empleado Legajo: ${leg}`, n);
-      closeModal(); render(current);
-    };
-
-    function employeeTable(limit) {
-      let filtered = employees.filter(e => currentUserRole === 'admin' ? true : e.owner === currentUser);
-      let arr = limit ? filtered.slice(0, limit) : filtered;
-
-      if (arr.length === 0) return `<div class="empty">No hay empleados registrados.</div>`;
-      return `<div class="table-wrap"><table class="table">
-        <thead><tr><th>Legajo</th><th>Perfil</th><th>Empleado</th><th>DNI / Ingreso</th><th>Puesto</th><th>Docs</th><th>Acciones</th></tr></thead>
-        <tbody>
-          ${arr.map(e => `<tr>
-            <td><b>${e.legajo || 'S/L'}</b></td>
-            <td>${e.foto ? `<img src="${e.foto}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">` : `👤`}</td>
-            <td><b>${e.nombre}</b></td>
-            <td>${e.dniNum}<br><small class="muted">${e.fechaIngreso}</small></td>
-            <td>${e.puesto}</td>
-            <td>
-              <button class="secondary" style="padding:4px 6px; font-size:11px;" onclick="verDocumentos(${e.id})">📷 Docs</button>
-              <button class="primary" style="padding:4px 6px; font-size:11px; background:#10b981;" onclick="descargarHistorialPDF(${e.id})">📄 PDF</button>
-            </td>
-            <td><button class="secondary" style="color:red; border-color:#fca5a5" onclick="deleteEmployee(${e.id})">Eliminar</button></td>
-          </tr>`).join("")}
-        </tbody>
-      </table></div>`;
-    }
-
-    window.verDocumentos = function(id) {
-      const emp = employees.find(e => e.id === id);
-      if (!emp) return;
-      openModal(`
-        <h2>Documentos - ${emp.nombre}</h2>
-        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:10px;">
-          <div><b>DNI</b><br>${emp.fotoDni ? `<img src="${emp.fotoDni}" style="width:100%;">` : 'Sin cargar'}</div>
-          <div><b>Antecedentes</b><br>${emp.fotoAntecedentes ? `<img src="${emp.fotoAntecedentes}" style="width:100%;">` : 'Sin cargar'}</div>
-          <div><b>Seguro</b><br>${emp.fotoSeguro ? `<img src="${emp.fotoSeguro}" style="width:100%;">` : 'Sin cargar'}</div>
-        </div>
-      `);
-    };
-
-    window.deleteEmployee = function(id) {
-      if (!checkAdminPassword()) return;
-      const emp = employees.find(x => x.id === id);
-      if (confirm(`¿Eliminar legajo de ${emp ? emp.nombre : ''}?`)) {
-        employees = employees.filter(x => x.id !== id);
-        syncToFirebase(); addLog(`Legajo eliminado: ${emp ? emp.nombre : id}`);
-        render(current);
-      }
-    };
-
-    window.descargarHistorialPDF = async function(id) {
-      const emp = employees.find(e => e.id === id);
-      if (!emp) return;
-      const userConfig = await loadUserConfig();
-      const printWindow = window.open('', '_blank');
-      printWindow.document.write(`
-        <html><head><title>Legajo - ${emp.nombre}</title></head><body>
-        <h1 style="color:${userConfig.primaryColor}">${userConfig.appName}</h1>
-        <h2>Legajo N°: ${emp.legajo} - ${emp.nombre}</h2>
-        <p><b>DNI:</b> ${emp.dniNum} | <b>Puesto:</b> ${emp.puesto} | <b>Ingreso:</b> ${emp.fechaIngreso}</p>
-        </body></html>
-      `);
-      printWindow.document.close();
-      printWindow.focus();
-      setTimeout(() => printWindow.print(), 500);
-    };
-
-    function renderHistorialModule() {
-      let userLogs = currentUserRole === 'admin' ? auditLogs : auditLogs.filter(l => l.owner === currentUser || l.usuario === currentUser);
-      let rows = userLogs.map(log => `
-        <tr><td>${log.fechaHora}</td><td><b>${log.usuario}</b></td><td><span class="badge">${log.empleado || 'General'}</span></td><td>${log.accion}</td></tr>
-      `).join('');
-
-      return `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-          <h1>Historial Auditoría</h1>
-          ${currentUserRole === 'admin' ? `<button class="secondary" style="color:red" onclick="limpiarHistorialAuditoria()">🗑️ Limpiar Historial</button>` : ''}
-        </div>
-        <div class="card"><div class="table-wrap"><table class="table">
-          <thead><tr><th>Fecha</th><th>Usuario</th><th>Empleado</th><th>Acción</th></tr></thead>
-          <tbody>${rows.length ? rows : '<tr><td colspan="4">Sin registros.</td></tr>'}</tbody>
-        </table></div></div>`;
-    }
-
-    window.limpiarHistorialAuditoria = function() {
-      if (!checkAdminPassword()) return;
-      if (confirm("¿Vaciar registro de auditoría?")) {
-        auditLogs = [{ id: Date.now(), fechaHora: new Date().toLocaleString("es-AR"), usuario: currentUser, empleado: "Sistema", accion: "Historial reiniciado.", owner: currentUser }];
-        syncToFirebase(); render("historial");
-      }
-    };
-
-    window.openRemoteAttendanceModal = function(tipo) {
-      const userEmps = employees.filter(e => currentUserRole === 'admin' ? true : e.owner === currentUser);
-      const options = userEmps.map(e => `<option value="${e.id}">${e.nombre}</option>`).join('');
-      openModal(`<h2>📍 Marcar ${tipo} GPS</h2>
-        <label>Empleado<select id="remote_empId">${options}</select></label><br><br>
-        <button class="primary" onclick="processRemoteAttendance('${tipo}')">Fichar ${tipo}</button>`);
-    };
-
-    window.processRemoteAttendance = function(tipo) {
-      const empId = parseInt(document.getElementById("remote_empId").value);
-      const emp = employees.find(e => e.id === empId);
-
-      if (!navigator.geolocation) return alert("Sin soporte para geolocalización.");
-
-      navigator.geolocation.getCurrentPosition((position) => {
-        const mapUrl = `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}`;
-        const horaActual = new Date().toLocaleTimeString("es-AR", { hour: '2-digit', minute: '2-digit' });
-        const hoy = new Date().toISOString().split('T')[0];
-
-        if (tipo === 'Entrada') {
-          attendance.unshift({ id: Date.now(), empId, fecha: hoy, entrada: horaActual, salida: "-", estado: "Presente GPS", mapUrlEntrada: mapUrl, owner: currentUser });
-        } else {
-          let record = attendance.find(a => a.empId === empId && a.salida === "-");
-          if (record) {
-            record.salida = horaActual; record.mapUrlSalida = mapUrl; record.estado = "Finalizado GPS";
-          } else {
-            attendance.unshift({ id: Date.now(), empId, fecha: hoy, entrada: "-", salida: horaActual, estado: "Salida GPS", mapUrlSalida: mapUrl, owner: currentUser });
-          }
-        }
-
-        syncToFirebase(); addLog(`Fichado GPS ${tipo}`, emp ? emp.nombre : 'General');
-        alert(`¡${tipo} marcada correctamente!`); closeModal(); render("asistencia");
-      }, () => alert("No se pudo obtener ubicación GPS."));
-    };
-
-    function attendanceTable() {
-      const data = attendance.filter(a => currentUserRole === 'admin' ? true : a.owner === currentUser);
-      if (!data.length) return `<div class="empty">Sin fichajes cargados.</div>`;
-      
-      let rows = data.map(a => {
-        const emp = employees.find(e => e.id === a.empId);
-        return `<tr>
-          <td><b>${emp ? emp.nombre : "S/A"}</b></td><td>${a.fecha}</td><td>${a.entrada}</td><td>${a.salida}</td>
-          <td><span class="badge">${a.estado}</span></td>
-          <td>
-            ${a.mapUrlEntrada ? `<a href="${a.mapUrlEntrada}" target="_blank">Entrada</a> ` : ''}
-            ${a.mapUrlSalida ? `<a href="${a.mapUrlSalida}" target="_blank">Salida</a>` : ''}
-          </td>
-          <td><button class="secondary" style="color:red" onclick="deleteAttendance(${a.id})">Eliminar</button></td>
-        </tr>`;
-      }).join('');
-
-      return `<div class="table-wrap"><table class="table">
-        <thead><tr><th>Empleado</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Estado</th><th>GPS</th><th>Acción</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table></div>`;
-    }
-
-    function renderRangoDatesModule(key, title) {
-      const data = (records[key] || []).filter(i => currentUserRole === 'admin' ? true : i.owner === currentUser);
-      return `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-          <h1>${title}</h1>
-          <button class="primary" onclick="openRangoModal('${key}', '${title}')">+ Nuevo</button>
-        </div>
-        <div class="card"><div class="table-wrap"><table class="table">
-          <thead><tr><th>Empleado</th><th>Detalle</th><th>Estado</th><th>Desde</th><th>Hasta</th><th>Acción</th></tr></thead>
-          <tbody>
-            ${data.map(i => `<tr><td><b>${i.f0}</b></td><td>${i.f1}</td><td>${i.f2}</td><td>${i.f3}</td><td>${i.f4||'-'}</td><td><button class="secondary" style="color:red" onclick="deleteRecord('${key}', ${i.id})">Eliminar</button></td></tr>`).join('')}
-          </tbody>
-        </table></div></div>`;
-    }
-
-    window.openRangoModal = function(key, title) {
-      const options = employees.filter(e => currentUserRole === 'admin' ? true : e.owner === currentUser).map(e => `<option value="${e.nombre}">${e.nombre}</option>`).join('');
-      const hoy = new Date().toISOString().split('T')[0];
-      openModal(`<h2>${title}</h2>
-        <div class="form-grid">
-          <label class="full">Empleado<select id="gen_0">${options}</select></label>
-          <label>Motivo<input id="gen_1"></label>
-          <label>Estado<input id="gen_2"></label>
-          <label>Desde<input type="date" id="gen_3" value="${hoy}"></label>
-          <label>Hasta<input type="date" id="gen_4" value="${hoy}"></label>
-        </div><br>
-        <button class="primary" onclick="saveRecordRango('${key}')">Guardar</button>`);
-    };
-
-    window.saveRecordRango = async function(key) {
-      if (!records[key]) records[key] = [];
-      const empNombre = document.getElementById("gen_0").value;
-      records[key].push({
-        id: Date.now(), f0: empNombre, f1: document.getElementById("gen_1").value,
-        f2: document.getElementById("gen_2").value, f3: document.getElementById("gen_3").value,
-        f4: document.getElementById("gen_4").value, owner: currentUser
-      });
-      syncToFirebase(); addLog(`Nuevo registro en ${key}`, empNombre);
-      closeModal(); render(current);
-    };
-
-    function renderCustomModule(key, title, headers, modalFn) {
-      const data = (records[key] || []).filter(i => currentUserRole === 'admin' ? true : i.owner === currentUser);
-      return `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-          <h1>${title}</h1>
-          <button class="primary" onclick="${modalFn}">+ Nuevo</button>
-        </div>
-        <div class="card"><div class="table-wrap"><table class="table">
-          <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}<th>Acción</th></tr></thead>
-          <tbody>
-            ${data.map(i => `<tr><td><b>${i.f0}</b></td><td>${i.f1}</td><td>${i.f2}</td><td>${i.f3}</td><td>-</td><td><button class="secondary" style="color:red" onclick="deleteRecord('${key}', ${i.id})">Eliminar</button></td></tr>`).join('')}
-          </tbody>
-        </table></div></div>`;
-    }
-
-    window.openGenericModal = function(key, title) {
-      const options = employees.filter(e => currentUserRole === 'admin' ? true : e.owner === currentUser).map(e => `<option value="${e.nombre}">${e.nombre}</option>`).join('');
-      openModal(`<h2>${title}</h2>
-        <div class="form-grid">
-          <label>Empleado<select id="gen_0">${options}</select></label>
-          <label>Detalle<input id="gen_1"></label>
-          <label>Estado<input id="gen_2"></label>
-          <label>Fecha<input type="date" id="gen_3" value="${new Date().toISOString().split('T')[0]}"></label>
-        </div><br>
-        <button class="primary" onclick="saveRecordGeneric('${key}')">Guardar</button>`);
-    };
-
-    window.saveRecordGeneric = async function(key) {
-      if (!records[key]) records[key] = [];
-      const empNombre = document.getElementById("gen_0").value;
-      records[key].push({
-        id: Date.now(), f0: empNombre, f1: document.getElementById("gen_1").value,
-        f2: document.getElementById("gen_2").value, f3: document.getElementById("gen_3").value, owner: currentUser
-      });
-      syncToFirebase(); addLog(`Nuevo registro en ${key}`, empNombre);
-      closeModal(); render(current);
-    };
-
-    window.deleteRecord = function(key, id) {
-      if (!checkAdminPassword()) return;
-      if (confirm("¿Eliminar registro?")) {
-        records[key] = records[key].filter(r => r.id !== id);
-        syncToFirebase(); render(current);
-      }
-    };
-
-    window.deleteAttendance = function(id) {
-      if (!checkAdminPassword()) return;
-      if (confirm("¿Eliminar asistencia?")) {
-        attendance = attendance.filter(a => a.id !== id);
-        syncToFirebase(); render("asistencia");
-      }
-    };
-
-    window.openCreateUserModal = function() {
-      openModal(`<h2>Crear Nueva Cuenta</h2>
-        <div class="form-grid">
-          <label>Usuario<input id="usr_user"></label>
-          <label>Contraseña<input type="password" id="usr_pass"></label>
-          <label>Nombre<input id="usr_nombre"></label>
-          <label>Rol
-            <select id="usr_role">
-              <option value="usuario">Usuario Normal</option>
-              <option value="admin">Administrador</option>
-            </select>
-          </label>
-        </div><br>
-        <button class="primary" onclick="saveNewUser()">Crear Cuenta</button>`);
-    };
-
-    window.saveNewUser = function() {
-      const u = document.getElementById("usr_user").value.trim();
-      const p = document.getElementById("usr_pass").value.trim();
-      const n = document.getElementById("usr_nombre").value.trim() || u;
-      const r = document.getElementById("usr_role").value;
-      if (!u || !p) return alert("Complete los datos requeridos.");
-      users.push({ user: u, pass: p, role: r, nombre: n, email: "", whatsapp: "" });
-      syncToFirebase(); addLog(`Cuenta creada: ${u}`);
-      closeModal(); render("config");
-    };
-
-    window.deleteUser = function(index) {
-      if (!checkAdminPassword()) return;
-      if (confirm("¿Eliminar usuario?")) {
-        users.splice(index, 1);
-        syncToFirebase(); render("config");
-      }
-    };
-
-    window.openModal = function(body) {
-      const mBody = document.getElementById("modalBody");
-      const modal = document.getElementById("modal");
-      if (mBody && modal) { mBody.innerHTML = body; modal.classList.remove("hidden"); }
     };
 
     window.closeModal = function() {
-      const modal = document.getElementById("modal");
-      if (modal) modal.classList.add("hidden");
+      document.getElementById("modal").classList.add("hidden");
     };
 
-    window.filterEmployees = function() {
-      const q = document.getElementById("empSearch").value.toLowerCase();
-      document.querySelectorAll("#empTable tbody tr").forEach(r => {
-        r.style.display = r.innerText.toLowerCase().includes(q) ? "" : "none";
-      });
-    };
+    function render(p) {
+      current = p;
+      const content = document.getElementById("content");
+      if (!content) return;
+
+      if (p === "dashboard") {
+        content.innerHTML = `<div class="card"><h1>Dashboard</h1><p>Bienvenido <b>${currentUser}</b>. Total Empleados: <b>${employees.length}</b></p></div>`;
+      } else {
+        content.innerHTML = `<div class="card"><h1>Módulo ${p}</h1><p>Sección lista para cargar registros.</p></div>`;
+      }
+    }
+
+    // Inicialización de eventos al cargar el DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      initRealtimeSync();
+      document.getElementById("loginForm").addEventListener("submit", window.login);
+      document.getElementById("btnLogout").addEventListener("click", window.logout);
+      document.getElementById("btnCloseModal").addEventListener("click", window.closeModal);
+      
+      const nav = document.getElementById("nav");
+      if (nav) {
+        nav.addEventListener("click", (e) => {
+          const btn = e.target.closest("button");
+          if (!btn) return;
+          document.querySelectorAll("#nav button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          render(btn.getAttribute("data-page"));
+        });
+      }
+    });
   </script>
 </body>
 </html>
