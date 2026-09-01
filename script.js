@@ -1,152 +1,86 @@
-// ============================================================================
-// 🌐 SINCRONIZACIÓN EN LA NUBE (Datos globales entre diferentes PCs)
-// ============================================================================
-const BIN_ID = "65a0000012a5231935999999"; 
+// --- CONFIGURACIÓN E INICIALIZACIÓN DE FIREBASE ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { 
+  getFirestore, 
+  doc, 
+  getDoc, 
+  setDoc, 
+  onSnapshot 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-async function syncFromCloud() {
-  try {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`);
-    const data = await res.json();
-    if (data && data.record) {
-      if (data.record.users) users = data.record.users;
-      if (data.record.employees) employees = data.record.employees;
-      if (data.record.attendance) attendance = data.record.attendance;
-      if (data.record.records) records = data.record.records;
+// Reemplaza los siguientes valores con tus credenciales de la consola de Firebase
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_PROJECT_ID.firebaseapp.com",
+  projectId: "TU_PROJECT_ID",
+  storageBucket: "TU_PROJECT_ID.appspot.com",
+  messagingSenderId: "TU_SENDER_ID",
+  appId: "TU_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// --- MANEJO DE PERSISTENCIA CON FIREBASE FIRESTORE ---
+
+// Escuchar cambios en tiempo real desde Firestore
+function initRealtimeSync() {
+  onSnapshot(doc(db, "app_data", "main_store"), (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      users = data.users || users;
+      employees = data.employees || [];
+      attendance = data.attendance || [];
+      auditLogs = data.auditLogs || [];
+      records = data.records || records;
+      
+      // Re-renderizar la pantalla actual con los nuevos datos
+      if (currentUser) {
+        render(current);
+      }
     }
-  } catch (e) {
-    console.log("Cargando desde respaldo local:", e);
+  });
+}
+
+// Guardar el estado global de la aplicación en la nube
+async function syncToFirebase() {
+  try {
+    await setDoc(doc(db, "app_data", "main_store"), {
+      users,
+      employees,
+      attendance,
+      auditLogs,
+      records
+    }, { merge: true });
+  } catch (error) {
+    console.error("Error al sincronizar con Firebase:", error);
   }
 }
 
-async function syncToCloud() {
+// Cargar y guardar configuraciones individuales por usuario
+async function loadUserConfig() {
+  if (!currentUser) return defaultConfig;
   try {
-    await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ users, employees, attendance, records })
-    });
-  } catch (e) {
-    console.error("Error al sincronizar en la nube:", e);
-  }
-}
-
-// ============================================================================
-// 🔒 CONTROL DE LICENCIA POR HARDWARE (HWID) Y VENCIMIENTO MENSUAL
-// ============================================================================
-let machineIdSync = null;
-let crypto = null;
-let fs = null;
-let path = null;
-
-try {
-  machineIdSync = require('node-machine-id').machineIdSync;
-  crypto = require('crypto');
-  fs = require('fs');
-  path = require('path');
-} catch (e) {
-  // Entorno de navegador puro (GitHub Pages)
-}
-
-const MI_CLAVE_SECRETA = "ValhallaSystem2026MasterKey";
-const MI_PC_HWID = "96C28570-B7F7-0000-0000-000000000000";
-
-function getPeriodoActual() {
-  const fecha = new Date();
-  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-  const ano = fecha.getFullYear();
-  return `${mes}-${ano}`;
-}
-
-function calcularClaveEsperada(hwid, periodo) {
-  if (!crypto) return "1234-5678-9012";
-  const hash = crypto
-    .createHash('sha256')
-    .update(`${hwid}-${periodo}-${MI_CLAVE_SECRETA}`)
-    .digest('hex');
-
-  const bloque = hash.substring(0, 12).toUpperCase();
-  return `${bloque.slice(0, 4)}-${bloque.slice(4, 8)}-${bloque.slice(8, 12)}`;
-}
-
-function verificarProteccionHardware() {
-  try {
-    if (!machineIdSync) return true;
-    const currentHwid = machineIdSync();
-
-    if (MI_PC_HWID && currentHwid === MI_PC_HWID) {
-      console.log("Acceso de Desarrollador Concedido.");
-      return true;
-    }
-
-    const periodoActual = getPeriodoActual();
-    const claveCorrectaEsteMes = calcularClaveEsperada(currentHwid, periodoActual);
-    const licensePath = path ? path.join(process.cwd(), 'license.lic') : '';
-
-    if (fs && fs.existsSync(licensePath)) {
-      const claveGuardada = fs.readFileSync(licensePath, 'utf8').trim();
-      if (claveGuardada === claveCorrectaEsteMes) {
-        return true;
-      }
-    }
-
-    let nuevaClave = null;
-    if (typeof window !== 'undefined' && typeof window.prompt === 'function') {
-      nuevaClave = window.prompt(
-        `⚠️ LICENCIA DE USO - VALHALLA SYSTEM\n\n` +
-        `Período actual: ${periodoActual}\n` +
-        `ID de Hardware: ${currentHwid}\n\n` +
-        `Ingrese la clave de activación:`
-      );
-    }
-
-    if (nuevaClave && nuevaClave.trim() === claveCorrectaEsteMes) {
-      if (fs) fs.writeFileSync(licensePath, nuevaClave.trim());
-      if (typeof window !== 'undefined' && typeof window.alert === 'function') {
-        window.alert("¡Licencia validada correctamente!");
-      }
-      return true;
-    } else {
-      if (typeof window !== 'undefined' && typeof window.alert === 'function') {
-        window.alert("❌ Clave incorrecta o vencida. El sistema se cerrará.");
-      }
-      if (typeof process !== 'undefined' && process.exit) {
-        process.exit(0);
-      }
-      return false;
+    const docSnap = await getDoc(doc(db, "user_configs", currentUser));
+    if (docSnap.exists()) {
+      return docSnap.data();
     }
   } catch (error) {
-    console.error("Error al verificar la licencia de Hardware:", error);
-    return false;
+    console.error("Error al cargar configuración:", error);
   }
+  return defaultConfig;
 }
 
-verificarProteccionHardware();
-
-// ============================================================================
-// --- MANEJO DE PERSISTENCIA ---
-// ============================================================================
-function loadStorage(key, defaultValue) {
+async function saveUserConfig(configData) {
+  if (!currentUser) return;
   try {
-    if (typeof localStorage === 'undefined') return defaultValue;
-    const saved = localStorage.getItem(key);
-    return saved ? JSON.parse(saved) : defaultValue;
-  } catch (e) {
-    console.error(`Error al cargar ${key} desde localStorage:`, e);
-    return defaultValue;
+    await setDoc(doc(db, "user_configs", currentUser), configData);
+  } catch (error) {
+    console.error("Error al guardar configuración:", error);
   }
 }
 
-function saveStorage(key, data) {
-  try {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(key, JSON.stringify(data));
-    }
-    syncToCloud(); 
-  } catch (e) {
-    console.error(`Error al guardar ${key} en localStorage:`, e);
-  }
-}
-
+// Configuración por defecto del sistema (Neutro)
 const defaultConfig = {
   appName: "Valhalla System Capital Humano",
   primaryColor: "#0878ee",
@@ -157,25 +91,20 @@ const defaultConfig = {
 let currentUser = null;
 let currentUserRole = "admin";
 
-function loadUserConfig() {
-  if (!currentUser) return defaultConfig;
-  return loadStorage(`app_config_${currentUser}`, defaultConfig);
-}
-
-let users = loadStorage("app_users", [
+let users = [
   { user: "admin", pass: "1234", role: "admin", nombre: "Administrador General", email: "admin@valhalla.com", whatsapp: "+5491100000000" },
   { user: "usuario", pass: "1234", role: "usuario", nombre: "Usuario Operativo", email: "usuario@valhalla.com", whatsapp: "" }
-]);
+];
 
-let employees = loadStorage("app_employees", []);
-let attendance = loadStorage("app_attendance", []);
-let auditLogs = loadStorage("app_auditLogs", [
+let employees = [];
+let attendance = [];
+let auditLogs = [
   { id: 1, fechaHora: new Date().toLocaleString("es-AR"), usuario: "sistema", accion: "Sistema iniciado", owner: "admin" }
-]);
+];
 
-let records = loadStorage("app_records", {
+let records = {
   seguridad: [], salud: [], desempeno: [], capacitaciones: [], encuestas: [], recibos: [], vacaciones: [], ausencias: [], legajos: []
-});
+};
 
 const titles = {
   dashboard: "Dashboard", personal: "Administración de personal", asistencia: "Control de asistencia",
@@ -187,81 +116,32 @@ const titles = {
 
 let current = "dashboard";
 
-// --- GESTIÓN DE SESIONES MULTIUSUARIO EN PESTAÑAS ---
-function loadCurrentSession() {
-  if (typeof sessionStorage === 'undefined') return;
-  const savedUser = sessionStorage.getItem("app_current_user");
-  if (savedUser) {
-    const found = users.find(u => u.user === savedUser);
-    if (found) {
-      currentUser = found.user;
-      currentUserRole = found.role;
-      
-      const loginElem = document.getElementById("login");
-      const appElem = document.getElementById("app");
-      if (loginElem) loginElem.classList.add("hidden");
-      if (appElem) appElem.classList.remove("hidden");
-      
-      updateHeaderUserInfo();
-      applyAppTheme();
-      render("dashboard");
-    }
+document.addEventListener("DOMContentLoaded", () => {
+  initRealtimeSync();
+  applyAppTheme();
+
+  const dateEl = document.getElementById("date");
+  if (dateEl) {
+    dateEl.textContent = new Date().toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   }
-}
 
-// --- GESTIÓN DE MODALES ---
-function openModal(body) {
-  const mBody = document.getElementById("modalBody");
-  const modal = document.getElementById("modal");
-  if (mBody && modal) { 
-    mBody.innerHTML = body; 
-    modal.classList.remove("hidden"); 
-    modal.style.display = "flex";
+  const nav = document.getElementById("nav");
+  if (nav) {
+    nav.addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      const page = btn.getAttribute("data-page");
+      if (page) {
+        document.querySelectorAll("#nav button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        render(page);
+      }
+    });
   }
-}
+});
 
-function closeModal() {
-  const modal = document.getElementById("modal");
-  if (modal) {
-    modal.classList.add("hidden");
-    modal.style.display = "none";
-  }
-}
-
-if (typeof document !== 'undefined') {
-  document.addEventListener("DOMContentLoaded", async () => {
-    await syncFromCloud();
-    loadCurrentSession();
-
-    const dateEl = document.getElementById("date");
-    if (dateEl) {
-      dateEl.textContent = new Date().toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-    }
-
-    const nav = document.getElementById("nav");
-    if (nav) {
-      nav.addEventListener("click", (e) => {
-        const btn = e.target.closest("button");
-        if (!btn) return;
-        const page = btn.getAttribute("data-page");
-        if (page) {
-          document.querySelectorAll("#nav button").forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
-          render(page);
-        }
-      });
-    }
-
-    const modalCloseBtn = document.getElementById("modalClose");
-    if (modalCloseBtn) {
-      modalCloseBtn.addEventListener("click", closeModal);
-    }
-  });
-}
-
-function applyAppTheme() {
-  if (typeof document === 'undefined') return;
-  const userConfig = loadUserConfig();
+async function applyAppTheme() {
+  const userConfig = await loadUserConfig();
 
   const headerTitle = document.getElementById("appTitleHeader");
   const sidebarTitle = document.getElementById("sidebarTitle");
@@ -269,8 +149,10 @@ function applyAppTheme() {
   if (sidebarTitle) sidebarTitle.textContent = userConfig.appName;
   document.title = userConfig.appName;
 
+  // Aplicar Color Principal
   document.documentElement.style.setProperty('--primary-color', userConfig.primaryColor);
 
+  // Aplicar Logo individual
   const appLogo = document.getElementById("appLogo");
   const sidebarLogo = document.getElementById("sidebarLogo");
   if (userConfig.appLogoImg) {
@@ -282,6 +164,7 @@ function applyAppTheme() {
     if (sidebarLogo) sidebarLogo.textContent = "CH";
   }
 
+  // Aplicar Fondo de pantalla individual
   const loginScreen = document.getElementById("login");
   if (loginScreen) {
     loginScreen.style.backgroundImage = userConfig.bgImage ? `url('${userConfig.bgImage}')` : `linear-gradient(135deg, #071a33, ${userConfig.primaryColor})`;
@@ -324,9 +207,10 @@ function addLog(accion, empleadoAsociado = "General") {
     accion: accion,
     owner: currentUser || "sistema"
   });
-  saveStorage("app_auditLogs", auditLogs);
+  syncToFirebase();
 }
 
+// NUEVA FUNCIÓN CON COMPRESIÓN DE IMÁGENES AUTOMÁTICA
 function getBase64(file, maxWidth = 800, quality = 0.7) {
   return new Promise((resolve, reject) => {
     if (!file) return resolve("");
@@ -372,14 +256,11 @@ function checkAdminPassword() {
 }
 
 function toggleSide() {
-  const sidebar = document.querySelector(".sidebar");
-  if (sidebar) sidebar.classList.toggle("open");
+  document.querySelector(".sidebar").classList.toggle("open");
 }
 
-async function login(event) {
+function login(event) {
   if (event) event.preventDefault();
-  await syncFromCloud();
-
   const uInput = document.getElementById("loginUser");
   const pInput = document.getElementById("loginPass");
 
@@ -391,18 +272,9 @@ async function login(event) {
   if (found) {
     currentUser = found.user;
     currentUserRole = found.role;
-    
-    if (typeof sessionStorage !== 'undefined') {
-      sessionStorage.setItem("app_current_user", found.user);
-    }
-
-    const loginElem = document.getElementById("login");
-    const appElem = document.getElementById("app");
-    
-    if (loginElem) loginElem.classList.add("hidden");
-    if (appElem) appElem.classList.remove("hidden");
+    document.getElementById("login").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
     if (pInput) pInput.value = ""; 
-    
     updateHeaderUserInfo();
     applyAppTheme();
     addLog(`Sesión iniciada por usuario: ${found.user}`);
@@ -415,24 +287,17 @@ async function login(event) {
 
 function logout() {
   addLog("Cierre de sesión.");
-  if (typeof sessionStorage !== 'undefined') {
-    sessionStorage.removeItem("app_current_user");
-  }
   currentUser = null;
   currentUserRole = "admin";
-  
-  const appElem = document.getElementById("app");
-  const loginElem = document.getElementById("login");
-  
-  if (appElem) appElem.classList.add("hidden");
-  if (loginElem) loginElem.classList.remove("hidden");
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("login").classList.remove("hidden");
   
   applyAppTheme();
 }
 
-function render(p) {
+async function render(p) {
   current = p;
-  const userConfig = loadUserConfig();
+  const userConfig = await loadUserConfig();
   const pageTitle = document.getElementById("pageTitle");
   if (pageTitle) pageTitle.textContent = titles[p] || userConfig.appName;
 
@@ -469,7 +334,7 @@ function render(p) {
       </div>
       <div class="card">${attendanceTable()}</div>`;
   } else if (p === "config") {
-    content.innerHTML = renderConfigAndUsersModule();
+    content.innerHTML = await renderConfigAndUsersModule();
   } else if (p === "historial") {
     content.innerHTML = renderHistorialModule();
   } else if (p === "vacaciones" || p === "ausencias") {
@@ -516,22 +381,19 @@ function openNotificationModal() {
 function saveNotificationContact() {
   const userAcc = users.find(u => u.user === currentUser);
   if (userAcc) {
-    const emailElem = document.getElementById("notif_userEmail");
-    const wpElem = document.getElementById("notif_userWp");
-    if (emailElem) userAcc.email = emailElem.value.trim();
-    if (wpElem) userAcc.whatsapp = wpElem.value.trim();
-    saveStorage("app_users", users);
+    userAcc.email = document.getElementById("notif_userEmail").value.trim();
+    userAcc.whatsapp = document.getElementById("notif_userWp").value.trim();
+    syncToFirebase();
     alert("¡Datos de contacto guardados correctamente!");
   }
 }
 
-function sendWhatsAppAdmin() {
+async function sendWhatsAppAdmin() {
   const adminAcc = users.find(u => u.role === "admin") || {};
-  const msgElem = document.getElementById("notif_mensaje");
-  const msg = msgElem ? msgElem.value.trim() : "";
+  const msg = document.getElementById("notif_mensaje").value.trim();
   if (!msg) return alert("Por favor, ingresá un mensaje.");
 
-  const userConfig = loadUserConfig();
+  const userConfig = await loadUserConfig();
   const wpNum = adminAcc.whatsapp ? adminAcc.whatsapp.replace(/[^0-9]/g, '') : "";
   const text = encodeURIComponent(`*Notificación de ${currentUser} (${userConfig.appName}):*\n${msg}`);
   
@@ -542,13 +404,12 @@ function sendWhatsAppAdmin() {
   }
 }
 
-function sendEmailAdmin() {
+async function sendEmailAdmin() {
   const adminAcc = users.find(u => u.role === "admin") || {};
-  const msgElem = document.getElementById("notif_mensaje");
-  const msg = msgElem ? msgElem.value.trim() : "";
+  const msg = document.getElementById("notif_mensaje").value.trim();
   if (!msg) return alert("Por favor, ingresá un mensaje.");
 
-  const userConfig = loadUserConfig();
+  const userConfig = await loadUserConfig();
   const targetEmail = adminAcc.email || "";
   const subject = encodeURIComponent(`Alerta / Notificación de ${currentUser} - ${userConfig.appName}`);
   const body = encodeURIComponent(`${msg}\n\nEnviado desde la plataforma ${userConfig.appName}`);
@@ -557,9 +418,9 @@ function sendEmailAdmin() {
 }
 
 // --- CONFIGURACIÓN Y PERSONALIZACIÓN DE USUARIO ---
-function renderConfigAndUsersModule() {
+async function renderConfigAndUsersModule() {
   const adminAccount = users.find(u => u.role === "admin") || { user: "admin", pass: "1234", nombre: "Administrador" };
-  const userConfig = loadUserConfig();
+  const userConfig = await loadUserConfig();
 
   let userRows = users.map((u, i) => `
     <tr>
@@ -642,7 +503,7 @@ function saveAdminCredentials() {
     adminAcc.nombre = newName;
     adminAcc.user = newUser;
     adminAcc.pass = newPass;
-    saveStorage("app_users", users);
+    syncToFirebase();
     updateHeaderUserInfo();
     addLog("Se actualizaron las credenciales y clave de Administrador.");
     alert("¡Credenciales de administrador actualizadas con éxito!");
@@ -652,7 +513,7 @@ function saveAdminCredentials() {
 
 async function saveSystemCustomization() {
   try {
-    let userConfig = loadStorage(`app_config_${currentUser}`, { ...defaultConfig });
+    let userConfig = await loadUserConfig();
 
     const nameInput = document.getElementById("cfg_appName");
     const colorInput = document.getElementById("cfg_color");
@@ -675,7 +536,7 @@ async function saveSystemCustomization() {
       userConfig.appLogoImg = await getBase64(logoInput.files[0], 400, 0.7);
     }
 
-    saveStorage(`app_config_${currentUser}`, userConfig);
+    await saveUserConfig(userConfig);
     applyAppTheme();
     addLog(`Se actualizó la apariencia individual de ${currentUser}.`);
     alert("¡Personalización individual guardada con éxito!");
@@ -714,21 +575,21 @@ async function saveEmployee() {
   if (!n) return alert("Por favor, ingresá el nombre.");
   if (!leg) return alert("Por favor, asigná un número de legajo.");
 
-  const photoFile = document.getElementById("newPhoto")?.files[0];
-  const dniFile = document.getElementById("newDniImg")?.files[0];
-  const antFile = document.getElementById("newAntecedentes")?.files[0];
-  const segFile = document.getElementById("newSeguro")?.files[0];
+  const photoFile = document.getElementById("newPhoto").files[0];
+  const dniFile = document.getElementById("newDniImg").files[0];
+  const antFile = document.getElementById("newAntecedentes").files[0];
+  const segFile = document.getElementById("newSeguro").files[0];
 
   const empData = {
     id: Date.now(),
     legajo: leg,
     nombre: n,
-    dniNum: document.getElementById("newDniNum")?.value || "-",
-    fechaIngreso: document.getElementById("newFechaIngreso")?.value || "-",
-    puesto: document.getElementById("newJob")?.value || "General",
-    sector: document.getElementById("newSector")?.value || "General",
-    telefono: document.getElementById("newPhone")?.value || "",
-    email: document.getElementById("newEmail")?.value || "",
+    dniNum: document.getElementById("newDniNum").value || "-",
+    fechaIngreso: document.getElementById("newFechaIngreso").value || "-",
+    puesto: document.getElementById("newJob").value || "General",
+    sector: document.getElementById("newSector").value || "General",
+    telefono: document.getElementById("newPhone").value || "",
+    email: document.getElementById("newEmail").value || "",
     foto: photoFile ? await getBase64(photoFile, 500) : "",
     fotoDni: dniFile ? await getBase64(dniFile, 800) : "",
     fotoAntecedentes: antFile ? await getBase64(antFile, 800) : "",
@@ -737,7 +598,7 @@ async function saveEmployee() {
   };
 
   employees.push(empData);
-  saveStorage("app_employees", employees);
+  syncToFirebase();
   addLog(`Alta de empleado Legajo N°: ${leg} (${n})`, n);
   closeModal();
   render(current);
@@ -807,17 +668,17 @@ function deleteEmployee(id) {
   const emp = employees.find(x => x.id === id);
   if (confirm(`¿Eliminar definitivamente el legajo de ${emp ? emp.nombre : 'este empleado'}?`)) {
     employees = employees.filter(x => x.id !== id);
-    saveStorage("app_employees", employees);
+    syncToFirebase();
     addLog(`Legajo de empleado eliminado: ${emp ? emp.nombre : id}`);
     render(current);
   }
 }
 
 // --- DESCARGA / VISTA DE HISTORIAL COMPLETO DE EMPLEADO (IMPRESIÓN / PDF) ---
-function descargarHistorialPDF(id) {
+async function descargarHistorialPDF(id) {
   const emp = employees.find(e => e.id === id);
   if (!emp) return;
-  const userConfig = loadUserConfig();
+  const userConfig = await loadUserConfig();
 
   const empAttendance = attendance.filter(a => a.empId === id);
   const empVacaciones = (records.vacaciones || []).filter(r => r.f0 === emp.nombre);
@@ -835,8 +696,6 @@ function descargarHistorialPDF(id) {
   });
 
   const printWindow = window.open('', '_blank');
-  if (!printWindow) return alert("Por favor habilita las ventanas emergentes en tu navegador.");
-  
   printWindow.document.write(`
     <html>
       <head>
@@ -964,7 +823,7 @@ function limpiarHistorialAuditoria() {
   if (!checkAdminPassword()) return;
   if (confirm("¿Estás seguro de vaciar completamente el registro de auditoría del sistema?")) {
     auditLogs = [{ id: Date.now(), fechaHora: new Date().toLocaleString("es-AR"), usuario: currentUser, empleado: "Sistema", accion: "Historial de auditoría reiniciado por administrador.", owner: currentUser }];
-    saveStorage("app_auditLogs", auditLogs);
+    syncToFirebase();
     render("historial");
   }
 }
@@ -981,13 +840,10 @@ function openRemoteAttendanceModal(tipo) {
 }
 
 function processRemoteAttendance(tipo) {
-  const empElem = document.getElementById("remote_empId");
-  if (!empElem) return;
-  
-  const empId = parseInt(empElem.value);
+  const empId = parseInt(document.getElementById("remote_empId").value);
   const emp = employees.find(e => e.id === empId);
 
-  if (typeof navigator === 'undefined' || !navigator.geolocation) return alert("Tu dispositivo no soporta geolocalización.");
+  if (!navigator.geolocation) return alert("Tu dispositivo no soporta geolocalización.");
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
@@ -1030,7 +886,7 @@ function processRemoteAttendance(tipo) {
         }
       }
 
-      saveStorage("app_attendance", attendance);
+      syncToFirebase();
       addLog(`Asistencia (${tipo}) registrada por GPS`, emp ? emp.nombre : 'General');
       alert(`¡${tipo} confirmada exitosamente con ubicación GPS!`);
       closeModal();
@@ -1112,21 +968,21 @@ function openRangoModal(key, title) {
 
 async function saveRecordRango(key) {
   if (!records[key]) records[key] = [];
-  const empNombre = document.getElementById("gen_0")?.value || "";
-  const fotoFile = document.getElementById("gen_foto")?.files[0];
+  const empNombre = document.getElementById("gen_0").value;
+  const fotoFile = document.getElementById("gen_foto").files[0];
 
   records[key].push({
     id: Date.now(),
     f0: empNombre,
-    f1: document.getElementById("gen_1")?.value || "",
-    f2: document.getElementById("gen_2")?.value || "",
-    f3: document.getElementById("gen_3")?.value || "",
-    f4: document.getElementById("gen_4")?.value || "",
+    f1: document.getElementById("gen_1").value,
+    f2: document.getElementById("gen_2").value,
+    f3: document.getElementById("gen_3").value,
+    f4: document.getElementById("gen_4").value,
     fotoDoc: fotoFile ? await getBase64(fotoFile, 800) : "",
     owner: currentUser
   });
 
-  saveStorage("app_records", records);
+  syncToFirebase();
   addLog(`Nuevo registro en ${titles[key] || key}`, empNombre);
   closeModal();
   render(current);
@@ -1172,20 +1028,20 @@ function openGenericModal(key, title) {
 
 async function saveRecordGeneric(key) {
   if (!records[key]) records[key] = [];
-  const empNombre = document.getElementById("gen_0")?.value || "";
-  const fotoFile = document.getElementById("gen_foto")?.files[0];
+  const empNombre = document.getElementById("gen_0").value;
+  const fotoFile = document.getElementById("gen_foto").files[0];
 
   records[key].push({
     id: Date.now(),
     f0: empNombre,
-    f1: document.getElementById("gen_1")?.value || "",
-    f2: document.getElementById("gen_2")?.value || "",
-    f3: document.getElementById("gen_3")?.value || "",
+    f1: document.getElementById("gen_1").value,
+    f2: document.getElementById("gen_2").value,
+    f3: document.getElementById("gen_3").value,
     fotoDoc: fotoFile ? await getBase64(fotoFile, 800) : "",
     owner: currentUser
   });
 
-  saveStorage("app_records", records);
+  syncToFirebase();
   addLog(`Nuevo registro en ${titles[key] || key}`, empNombre);
   closeModal();
   render(current);
@@ -1204,7 +1060,7 @@ function deleteRecord(key, id) {
   if (!checkAdminPassword()) return;
   if (confirm("¿Deseas eliminar este registro?")) {
     records[key] = records[key].filter(r => r.id !== id);
-    saveStorage("app_records", records);
+    syncToFirebase();
     render(current);
   }
 }
@@ -1213,7 +1069,7 @@ function deleteAttendance(id) {
   if (!checkAdminPassword()) return;
   if (confirm("¿Deseas eliminar esta asistencia?")) {
     attendance = attendance.filter(a => a.id !== id);
-    saveStorage("app_attendance", attendance);
+    syncToFirebase();
     render("asistencia");
   }
 }
@@ -1235,15 +1091,15 @@ function openCreateUserModal() {
 }
 
 function saveNewUser() {
-  const u = document.getElementById("usr_user")?.value.trim() || "";
-  const p = document.getElementById("usr_pass")?.value.trim() || "";
-  const n = document.getElementById("usr_nombre")?.value.trim() || u;
-  const r = document.getElementById("usr_role")?.value || "usuario";
+  const u = document.getElementById("usr_user").value.trim();
+  const p = document.getElementById("usr_pass").value.trim();
+  const n = document.getElementById("usr_nombre").value.trim() || u;
+  const r = document.getElementById("usr_role").value;
 
   if (!u || !p) return alert("Por favor complete usuario y contraseña.");
 
   users.push({ user: u, pass: p, role: r, nombre: n, email: "", whatsapp: "" });
-  saveStorage("app_users", users);
+  syncToFirebase();
   addLog(`Cuenta creada: ${u}`);
   closeModal();
   render("config");
@@ -1253,15 +1109,24 @@ function deleteUser(index) {
   if (!checkAdminPassword()) return;
   if (confirm("¿Deseas eliminar esta cuenta de usuario?")) {
     users.splice(index, 1);
-    saveStorage("app_users", users);
+    syncToFirebase();
     render("config");
   }
 }
 
+function openModal(body) {
+  const mBody = document.getElementById("modalBody");
+  const modal = document.getElementById("modal");
+  if (mBody && modal) { mBody.innerHTML = body; modal.classList.remove("hidden"); }
+}
+
+function closeModal() {
+  const modal = document.getElementById("modal");
+  if (modal) modal.classList.add("hidden");
+}
+
 function filterEmployees() {
-  const empSearch = document.getElementById("empSearch");
-  if (!empSearch) return;
-  const q = empSearch.value.toLowerCase();
+  const q = document.getElementById("empSearch").value.toLowerCase();
   document.querySelectorAll("#empTable tbody tr").forEach(r => {
     r.style.display = r.innerText.toLowerCase().includes(q) ? "" : "none";
   });
