@@ -23,6 +23,7 @@
     .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
     button.primary { background: var(--primary-color); color: #fff; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; }
     button.secondary { background: #fff; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+    button.danger { background: #ef4444; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
     .table-wrap { overflow-x: auto; }
     .table { width: 100%; border-collapse: collapse; text-align: left; }
     .table th, .table td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
@@ -99,7 +100,7 @@
     </main>
   </div>
 
-  <!-- MODAL -->
+  <!-- MODAL GLOBAL -->
   <div id="modal" class="modal-overlay hidden">
     <div class="modal-content">
       <button class="close-modal" id="btnCloseModal">✕</button>
@@ -107,7 +108,7 @@
     </div>
   </div>
 
-  <!-- FIREBASE Y LÓGICA DE LA APLICACIÓN -->
+  <!-- FIREBASE Y LÓGICA DE APLICACIÓN -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -149,7 +150,7 @@
           syncToFirebase();
         }
       }, (err) => {
-        console.error("Error en conexión a Firestore:", err);
+        console.error("Error al conectar con Firestore:", err);
       });
     }
 
@@ -157,7 +158,6 @@
       try {
         const cleanData = JSON.parse(JSON.stringify({ users, employees, attendance }));
         await setDoc(doc(db, "app_data", "main_store"), cleanData, { merge: true });
-        console.log("Datos guardados en Firestore correctamente.");
       } catch (err) {
         console.error("Error al guardar en Firestore:", err);
       }
@@ -193,6 +193,14 @@
       document.getElementById("modal").classList.add("hidden");
     };
 
+    window.eliminarEmpleado = function(id) {
+      if (confirm("¿Confirmas que deseas eliminar este empleado?")) {
+        employees = employees.filter(e => e.id !== id);
+        syncToFirebase();
+        render("personal");
+      }
+    };
+
     function render(p) {
       current = p;
       const content = document.getElementById("content");
@@ -206,20 +214,20 @@
           <div class="card">
             <h1>Dashboard General</h1>
             <p>Bienvenido <b>${currentUser}</b>.</p>
-            <p>Empleados cargados en el sistema: <b>${employees.length}</b></p>
+            <p>Empleados activos registrados: <b>${employees.length}</b></p>
           </div>`;
       } 
       else if (p === "personal") {
         content.innerHTML = `
           <div class="card">
-            <h3>Cargar Nuevos Datos Personales</h3>
+            <h3>Cargar Datos Personales</h3>
             <form id="formEmpleado" class="form-grid">
               <label>Nombre Completo <input type="text" id="empNombre" required></label>
               <label>DNI / Documento <input type="text" id="empDni" required></label>
               <label>Puesto / Cargo <input type="text" id="empPuesto" required></label>
               <label>Área / Departamento <input type="text" id="empArea" required></label>
               <label class="full">
-                <button type="submit" class="primary" style="margin-top: 10px;">Guardar Empleado en Firestore</button>
+                <button type="submit" class="primary" style="margin-top: 10px;">Guardar Empleado</button>
               </label>
             </form>
           </div>
@@ -234,17 +242,21 @@
                     <th>DNI</th>
                     <th>Puesto</th>
                     <th>Área</th>
+                    <th>Acción</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${employees.length === 0 
-                    ? '<tr><td colspan="4" class="muted">No hay empleados registrados.</td></tr>' 
+                    ? '<tr><td colspan="5" class="muted">No hay empleados registrados.</td></tr>' 
                     : employees.map(e => `
                         <tr>
                           <td>${e.nombre}</td>
                           <td>${e.dni}</td>
                           <td>${e.puesto}</td>
                           <td>${e.area}</td>
+                          <td>
+                            <button class="danger" onclick="eliminarEmpleado('${e.id}')">Eliminar</button>
+                          </td>
                         </tr>
                       `).join('')}
                 </tbody>
@@ -271,7 +283,7 @@
         content.innerHTML = `
           <div class="card">
             <h1>Módulo: ${p}</h1>
-            <p>Sección configurada y lista para cargar datos.</p>
+            <p>Sección configurada y lista para operar.</p>
           </div>`;
       }
     }
